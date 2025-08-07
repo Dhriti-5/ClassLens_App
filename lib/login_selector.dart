@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'get_departments.dart';
+import 'data_models/departments.dart';
 
 class SnackBarExample extends StatelessWidget {
   const SnackBarExample({super.key});
@@ -43,77 +45,53 @@ class LoginSelector extends StatefulWidget {
 }
 
 class _LoginSelectorState extends State<LoginSelector> {
+  late Future<List<Departments>> futureDepartments;
 
-  double _rotationX = 0;
-  double _rotationY = 0;
+  @override
+  void initState() {
+    super.initState();
+    futureDepartments = ApiServices.getDepartments();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Gesture Detector"),
+        title: const Text("Departments"),
         centerTitle: true,
       ),
-      backgroundColor: Colors.grey[200],
-      body: Center(
+      body: FutureBuilder<List<Departments>>(
+        future: futureDepartments,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final departments = snapshot.data!;
+            return ListView.builder(
+              itemCount: departments.length,
+              itemBuilder: (context, index) {
 
-        child: GestureDetector(
-          onTap: (){
-            final snackBar = SnackBar(content: const Text("You tapped the container"),
-            duration: const Duration(seconds: 2),
+                final department = departments[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(department.id.toString()),
+                  ),
+                  title: Text(department.departmentName),
+                );
+              },
             );
+          }
 
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          },
-          onPanUpdate: (details) {
+          else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
 
-            setState(() {
-              _rotationY += details.delta.dx / 100;
-              _rotationX -= details.delta.dy / 100;
-            });
-          },
-          onPanEnd: (details) {
-
-            setState(() {
-              _rotationX = 0;
-              _rotationY = 0;
-            });
-          },
-          child:
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 300,
-            height: 300,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001)
-              ..rotateX(_rotationX)
-              ..rotateY(_rotationY),
-            transformAlignment: FractionalOffset.center,
-            decoration: BoxDecoration(
-                color: Colors.teal,
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    spreadRadius: 2,
-                    blurRadius: 15,
-                    offset: const Offset(0, 10),
-                  )
-                ]),
-            child: const Center(
-              child: Text(
-                "Drag Me!",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
       ),
-
     );
   }
 }
+
