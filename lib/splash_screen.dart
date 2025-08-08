@@ -1,7 +1,7 @@
-import 'package:classlens/login_selector.dart';
 import 'package:flutter/material.dart';
-import 'login_selector.dart';
+import 'login/login_selector.dart';
 import 'package:lottie/lottie.dart';
+import 'page_animations/slide_animation.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -33,6 +33,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,9 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
                               ..forward().whenComplete(() {
                                 Future.delayed(const Duration(seconds: 3), () {
                                   if(mounted){
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(builder: (context) => LoginSelector()),
-                                    );
+                                      splashScreenNavigator(context, const LoginSelector());
                                   }
                                 });
                               });
@@ -109,6 +109,42 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+
+class SnackBarExample extends StatelessWidget {
+  const SnackBarExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SnackBar Example'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          child: const Text('Show SnackBar'),
+          onPressed: () {
+
+            final snackBar = SnackBar(
+
+              content: const Text('This is a SnackBar!'),
+
+              action: SnackBarAction(
+                label: 'Undo',
+                onPressed: () {
+                  // Some code to undo the change.
+                },
+              ),
+            );
+
+
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          },
+        ),
       ),
     );
   }
