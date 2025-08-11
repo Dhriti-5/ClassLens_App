@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:classlens/data_models/departments.dart';
+import 'package:classlens/api/fetchDepartments.dart';
 
 class TeacherSignUpPage extends StatefulWidget {
   const TeacherSignUpPage({super.key});
@@ -9,7 +11,7 @@ class TeacherSignUpPage extends StatefulWidget {
 
 class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   final _formKey = GlobalKey<FormState>();
-
+  late Future<List<Departments>> _departments;
 
   static const Color primaryBlue = Color(0xFF4A70E2);
   static const Color accentYellow = Color(0xFFFFC107);
@@ -18,7 +20,12 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   static const Color textFieldFillColor = Color(0xFFF2F3F7);
   static const Color textColor = Color(0xFF333333);
 
-   String? departmentValue ;
+  String? departmentID ;
+  @override
+  void initState() {
+    super.initState();
+    _departments = ApiServices.getDepartments();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,17 +101,71 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
             const SizedBox(height: 20),
             TextFormField(decoration: _inputDecoration('Email Address', Icons.email_outlined), keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
-              decoration: _inputDecoration('Department', Icons.business_center_outlined),
-              items: const [
-                DropdownMenuItem(value: 'Computer Science', child: Text('Computer Science')),
-                DropdownMenuItem(value: 'Physics', child: Text('Physics')),
-                DropdownMenuItem(value: 'Chemistry', child: Text('Chemistry')),
-              ],
-              onChanged: (value) {setState(() {
-                departmentValue = value;
-              });},
+            // display department from api call
+
+            FutureBuilder<List<Departments>>(
+                future: _departments,
+                builder:(context,snapshot){
+                  if(snapshot.connectionState == ConnectionState.waiting){
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if(snapshot.hasError){
+                    return Text("Error: ${snapshot.error}");
+                  }
+
+                  if(snapshot.hasData){
+                    final departments = snapshot.data;
+
+                    return DropdownButtonFormField<String>(
+                      decoration: _inputDecoration("Departments", Icons.business_center_outlined),
+                      value: departmentID,
+
+                      isExpanded: true,
+                      selectedItemBuilder: (BuildContext context) {
+                        return departments!.map<Widget>((dept) {
+
+                          return Text(
+                            dept.departmentName,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          );
+                        }).toList();
+                      },
+
+                      items: departments?.map((dept) {
+
+                        return DropdownMenuItem<String>(
+                          value: dept.id.toString(),
+                          child: Tooltip(
+                            message: dept.departmentName,
+                            child: Text(
+                              dept.departmentName,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          departmentID = value;
+                        });
+                      },
+                      validator: (value) =>
+                      value == null ? 'Please Select a department' : null,
+                    );
+                  }
+
+                  return TextFormField(
+                    decoration: _inputDecoration("Departments", Icons.business_center_outlined)
+                        .copyWith(hintText: 'No departments available', fillColor: Colors.grey.shade200),
+                    enabled: false,
+
+                  );
+                },
             ),
+
             const SizedBox(height: 20),
             TextFormField(decoration: _inputDecoration('Password', Icons.lock_outline), obscureText: true),
             const SizedBox(height: 32),

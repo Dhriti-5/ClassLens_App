@@ -14,11 +14,11 @@ class ApiServices{
       final responce = await http.get(Uri.parse(apiUrl));
 
       if(responce.statusCode == 200){
-          final List<dynamic> jsonData = jsonDecode(responce.body);
+        final List<dynamic> jsonData = jsonDecode(responce.body);
 
-          return jsonData.map(
-              (json) => Departments.fromJson(json as Map<String, dynamic>)
-          ).toList();
+        return jsonData.map(
+                (json) => Departments.fromJson(json as Map<String, dynamic>)
+        ).toList();
       }
       else{
         throw Exception('Failed to load Departments${responce.statusCode}');
