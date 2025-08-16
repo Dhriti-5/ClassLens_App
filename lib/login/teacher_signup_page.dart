@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:classlens/data_models/departments.dart';
 import 'package:classlens/api/fetchDepartments.dart';
+import 'package:flutter/services.dart';
+import 'package:classlens/login/teacher_login.dart';
+import 'package:classlens/page_animations/slide_animation.dart';
 
 class TeacherSignUpPage extends StatefulWidget {
   const TeacherSignUpPage({super.key});
@@ -12,6 +15,11 @@ class TeacherSignUpPage extends StatefulWidget {
 class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   final _formKey = GlobalKey<FormState>();
   late Future<List<Departments>> _departments;
+  bool _isLoading = false;
+
+  var _teacherNameController = TextEditingController();
+  var _teacherEmailController = TextEditingController();
+  var _teacherPasswordController = TextEditingController();
 
   static const Color primaryBlue = Color(0xFF4A70E2);
   static const Color accentYellow = Color(0xFFFFC107);
@@ -25,6 +33,14 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   void initState() {
     super.initState();
     _departments = ApiServices.getDepartments();
+  }
+
+  @override
+  void dispose(){
+    _teacherNameController.dispose();
+    _teacherEmailController.dispose();
+    _teacherPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -97,9 +113,38 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
             ),
             const SizedBox(height: 32),
 
-            TextFormField(decoration: _inputDecoration('Full Name', Icons.person_outline)),
+            TextFormField(
+              controller: _teacherNameController,
+              decoration: _inputDecoration('Full Name', Icons.person_outline),
+              validator: (value){
+                if(value==null || value.isEmpty){
+                 return "Please enter your name";
+                }
+                return null;
+              },
+            ),
+
             const SizedBox(height: 20),
-            TextFormField(decoration: _inputDecoration('Email Address', Icons.email_outlined), keyboardType: TextInputType.emailAddress),
+
+            TextFormField(
+                controller: _teacherEmailController,
+                decoration: _inputDecoration('Email Address', Icons.email_outlined),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value){
+                  if(value==null || value.isEmpty){
+                    return "Please enter an email";
+                  }
+                  final bool emailValid = RegExp(
+                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                      .hasMatch(value);
+                  if(!emailValid){
+                    return "Please enter a valid email";
+                  }
+
+                  return null;
+              },
+            ),
+
             const SizedBox(height: 20),
             // display department from api call
 
@@ -167,8 +212,28 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
             ),
 
             const SizedBox(height: 20),
-            TextFormField(decoration: _inputDecoration('Password', Icons.lock_outline), obscureText: true),
+
+            TextFormField(
+                controller: _teacherPasswordController,
+                decoration: _inputDecoration('Password', Icons.lock_outline),
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                validator: (value){
+                  if(value==null || value.isEmpty){
+                    return "Enter a password";
+                  }
+                  if (value.length != 6) {
+                    return 'Password must be exactly 6 digits long';
+                  }
+                  return null;
+                },
+            ),
             const SizedBox(height: 32),
+
 
             // Login Button
             ElevatedButton(
@@ -182,8 +247,56 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
                 elevation: 5,
                 shadowColor: primaryBlue.withOpacity(0.4),
               ),
-              onPressed: () {},
-              child: const Text('Sign Up', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              onPressed: _isLoading? null : () async{
+
+                if(_formKey.currentState!.validate()) {
+                  try {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    var name = _teacherNameController.text;
+                    var email = _teacherEmailController.text;
+                    var password = _teacherPasswordController.text;
+
+                    if (departmentID != null || departmentID!.isEmpty) {
+                      final String? responce = await ApiServices.signUpTeacher(
+                          name: name,
+                          email: email,
+                          password: password,
+                          departmentID: departmentID
+                      );
+
+                      if (!context.mounted) return;
+                      print(responce);
+
+                      if (responce == 'success') {
+                        final snackBar = SnackBar(
+                          content: Text('Registered successfully!'),
+                          backgroundColor: Colors.green,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        navigatorWithAnimation(context, const Login());
+                      }
+                      else {
+                        final snackBar = SnackBar(
+                          content: Text('Registration failed: $responce '),
+                          backgroundColor: Colors.red,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }
+                    }
+                  }
+                  catch(e){
+                    print(e);
+                  }
+                  finally{
+                    setState(() {
+                      _isLoading=false;
+                    });
+                  }
+                }
+              },
+              child: _isLoading? const CircularProgressIndicator(color: Colors.white):const Text('Sign Up', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             ),
           ],
         ),

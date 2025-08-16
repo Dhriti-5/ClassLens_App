@@ -30,4 +30,43 @@ class ApiServices{
       throw Exception("Failed to load : ${e}");
     }
   }
+
+  static Future<String?> signUpTeacher({required final String name, required String email, required String password,required String? departmentID}) async{
+
+    const String endpoint = "http://127.0.0.1:8000/api/registerNewTeacher";
+    final url = Uri.parse(endpoint);
+
+    try{
+
+      final headers = {
+        'Content-Type': 'application/json; charset=UTF-8'
+      };
+
+     final body = jsonEncode({
+       "name":name,
+       "email":email,
+       "password":password,
+       "departmentID":departmentID
+     });
+
+     final responce = await http.post(
+       url,
+       headers: headers,
+       body: body
+     );
+
+     if(responce.statusCode==201){
+       print('Sign up successful!');
+       return "success";
+     }
+     else{
+       return "failed";
+     }
+
+    }
+    catch(e){
+      print(e.toString());
+      return 'Could not connect to the server.';
+    }
+  }
 }
