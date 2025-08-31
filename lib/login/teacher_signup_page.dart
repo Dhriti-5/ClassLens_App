@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:classlens/data_models/departments.dart';
-import 'package:classlens/api/fetchDepartments.dart';
-import 'package:flutter/services.dart';
-import 'package:classlens/login/teacher_login.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
+import 'package:classlens/login/teacher_otp.dart';
 
 class TeacherSignUpPage extends StatefulWidget {
   const TeacherSignUpPage({super.key});
@@ -14,13 +11,11 @@ class TeacherSignUpPage extends StatefulWidget {
 
 class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  late Future<List<Departments>> _departments;
-  bool _isLoading = false;
+  bool isChecked = false;
 
-  var _teacherNameController = TextEditingController();
-  var _teacherEmailController = TextEditingController();
-  var _teacherPasswordController = TextEditingController();
+  final _teacherEmailController = TextEditingController();
 
+  // Color constants from your design
   static const Color primaryBlue = Color(0xFF4A70E2);
   static const Color accentYellow = Color(0xFFFFC107);
   static const Color backgroundColor = Color(0xFFF8F9FA);
@@ -28,18 +23,9 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
   static const Color textFieldFillColor = Color(0xFFF2F3F7);
   static const Color textColor = Color(0xFF333333);
 
-  String? departmentID ;
   @override
-  void initState() {
-    super.initState();
-    _departments = ApiServices.getDepartments();
-  }
-
-  @override
-  void dispose(){
-    _teacherNameController.dispose();
+  void dispose() {
     _teacherEmailController.dispose();
-    _teacherPasswordController.dispose();
     super.dispose();
   }
 
@@ -54,9 +40,8 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 const Icon(Icons.school, color: primaryBlue, size: 60),
-
+                const SizedBox(height: 8),
                 const Text(
                   'ClassLens',
                   style: TextStyle(
@@ -68,9 +53,7 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 30),
-
-                // 2. Main Login Card
-                _buildLoginCard(),
+                _buildTeacherSignUpPageCard(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -80,8 +63,7 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
     );
   }
 
-
-  Widget _buildLoginCard() {
+  Widget _buildTeacherSignUpPageCard() {
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
@@ -99,11 +81,10 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
         key: _formKey,
         child: Column(
           children: [
-
             const Icon(Icons.person, color: accentYellow, size: 48),
             const SizedBox(height: 16),
             const Text(
-              'Welcome, Teacher',
+              'Register Here',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -111,131 +92,49 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
                 color: textColor,
               ),
             ),
+            const SizedBox(height: 12),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Already have a password!",
+                  style: TextStyle(color: Colors.black54, fontSize: 15),
+                ),
+                const Text(
+                  "Do you want to change it?",
+                  style: TextStyle(color: Colors.black54, fontSize: 15),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
             const SizedBox(height: 32),
-
             TextFormField(
-              controller: _teacherNameController,
-              decoration: _inputDecoration('Full Name', Icons.person_outline),
-              validator: (value){
-                if(value==null || value.isEmpty){
-                 return "Please enter your name";
+              controller: _teacherEmailController,
+              decoration:
+              _inputDecoration('University Email Address', Icons.email_outlined),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter an email";
                 }
+                final bool emailValid = RegExp(
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                    .hasMatch(value);
+                final bool domainRegex = RegExp(
+                  r"^[a-zA-Z0-9._%+-]+@msubaroda\.ac\.in$",
+                ).hasMatch(value);
+
+                if(!emailValid){
+                  return "Please enter a valid email";
+                }
+                if (!domainRegex) {
+                  return "Please enter a valid University email";
+                }
+
                 return null;
               },
             ),
-
-            const SizedBox(height: 20),
-
-            TextFormField(
-                controller: _teacherEmailController,
-                decoration: _inputDecoration('Email Address', Icons.email_outlined),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value){
-                  if(value==null || value.isEmpty){
-                    return "Please enter an email";
-                  }
-                  final bool emailValid = RegExp(
-                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                      .hasMatch(value);
-                  if(!emailValid){
-                    return "Please enter a valid email";
-                  }
-
-                  return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-            // display department from api call
-
-            FutureBuilder<List<Departments>>(
-                future: _departments,
-                builder:(context,snapshot){
-                  if(snapshot.connectionState == ConnectionState.waiting){
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if(snapshot.hasError){
-                    return Text("Error: ${snapshot.error}");
-                  }
-
-                  if(snapshot.hasData){
-                    final departments = snapshot.data;
-
-                    return DropdownButtonFormField<String>(
-                      decoration: _inputDecoration("Departments", Icons.business_center_outlined),
-                      value: departmentID,
-
-                      isExpanded: true,
-                      selectedItemBuilder: (BuildContext context) {
-                        return departments!.map<Widget>((dept) {
-
-                          return Text(
-                            dept.departmentName,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          );
-                        }).toList();
-                      },
-
-                      items: departments?.map((dept) {
-
-                        return DropdownMenuItem<String>(
-                          value: dept.id.toString(),
-                          child: Tooltip(
-                            message: dept.departmentName,
-                            child: Text(
-                              dept.departmentName,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          departmentID = value;
-                        });
-                      },
-                      validator: (value) =>
-                      value == null ? 'Please Select a department' : null,
-                    );
-                  }
-
-                  return TextFormField(
-                    decoration: _inputDecoration("Departments", Icons.business_center_outlined)
-                        .copyWith(hintText: 'No departments available', fillColor: Colors.grey.shade200),
-                    enabled: false,
-
-                  );
-                },
-            ),
-
-            const SizedBox(height: 20),
-
-            TextFormField(
-                controller: _teacherPasswordController,
-                decoration: _inputDecoration('Password', Icons.lock_outline),
-                obscureText: true,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
-                validator: (value){
-                  if(value==null || value.isEmpty){
-                    return "Enter a password";
-                  }
-                  if (value.length != 6) {
-                    return 'Password must be exactly 6 digits long';
-                  }
-                  return null;
-                },
-            ),
-            const SizedBox(height: 32),
-
-
-            // Login Button
+            const SizedBox(height: 24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryBlue,
@@ -247,69 +146,27 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
                 elevation: 5,
                 shadowColor: primaryBlue.withOpacity(0.4),
               ),
-              onPressed: _isLoading? null : () async{
-
-                if(_formKey.currentState!.validate()) {
-                  try {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    var name = _teacherNameController.text;
-                    var email = _teacherEmailController.text;
-                    var password = _teacherPasswordController.text;
-
-                    if (departmentID != null || departmentID!.isEmpty) {
-                      final String? responce = await ApiServices.signUpTeacher(
-                          name: name,
-                          email: email,
-                          password: password,
-                          departmentID: departmentID
-                      );
-
-                      if (!context.mounted) return;
-                      print(responce);
-
-                      if (responce == 'success') {
-                        final snackBar = SnackBar(
-                          content: Text('Registered successfully!'),
-                          backgroundColor: Colors.green,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        navigatorWithAnimation(context, const Login());
-                      }
-                      else {
-                        final snackBar = SnackBar(
-                          content: Text('Registration failed: $responce '),
-                          backgroundColor: Colors.red,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      }
-                    }
-                  }
-                  catch(e){
-                    print(e);
-                  }
-                  finally{
-                    setState(() {
-                      _isLoading=false;
-                    });
-                  }
-                }
+              onPressed: () {
+               if(_formKey.currentState!.validate()){
+                 navigatorWithAnimation(context, TeacherOtpPage(email: _teacherEmailController.text));
+               }
               },
-              child: _isLoading? const CircularProgressIndicator(color: Colors.white):const Text('Sign Up', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            ),
+              child: Text('Get OTP',
+                  style:TextStyle(fontSize: 18, fontWeight: FontWeight.w600)
+                ),
+              ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  // A helper method for consistent input field styling
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.black54,fontSize: 15),
-      prefixIcon: Icon(icon, color: Colors.black54,size: 23,),
+      labelStyle: const TextStyle(color: Colors.black54, fontSize: 15),
+      prefixIcon: Icon(icon, color: Colors.black54, size: 23),
       fillColor: textFieldFillColor,
       filled: true,
       border: OutlineInputBorder(

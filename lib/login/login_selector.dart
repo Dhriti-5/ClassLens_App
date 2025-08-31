@@ -1,8 +1,7 @@
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:classlens/login/teacher_signup_page.dart';
-
+import 'package:classlens/login/teacher_login.dart';
 class LoginSelector extends StatefulWidget{
   const LoginSelector({super.key});
 
@@ -79,7 +78,7 @@ class _LoginSelectorState extends State<LoginSelector> {
                   color: const Color(0xFFF59E0B),
                   onTap: (){
                     // navigation to teacher login
-                    navigatorWithAnimation(context, TeacherSignUpPage());
+                    navigatorWithAnimation(context, Login());
                   }
               ),
 
