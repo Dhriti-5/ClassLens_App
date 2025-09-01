@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:classlens/login/teacher_login.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,10 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
   final _otpController3 = TextEditingController();
   final _otpController4 = TextEditingController();
 
+  static const int initialTimerSeconds=120;
+  late int secondsRemaining=initialTimerSeconds;
+  Timer? timer;
+
   final _otpFocusNode1 = FocusNode();
   final _otpFocusNode2 = FocusNode();
   final _otpFocusNode3 = FocusNode();
@@ -37,6 +43,32 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
   void initState() {
     super.initState();
     Future<bool>responce = ApiServices.sendOpt(email: widget.email);
+    _resetAndStartTimer();
+  }
+
+  void _resetAndStartTimer() {
+    timer?.cancel();
+    setState(() {
+      secondsRemaining=initialTimerSeconds;
+    });
+
+    timer=Timer.periodic(const Duration(seconds: 1), (timer){
+      if(secondsRemaining==0){
+        timer.cancel();
+      }
+      else{
+        setState(() {
+          secondsRemaining--;
+        });
+      }
+    });
+  }
+
+  String get _formattedTime{
+    final minutes = (secondsRemaining ~/ 60).toString().padLeft(2, '0');
+    final seconds = (secondsRemaining % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+
   }
 
   @override
@@ -49,6 +81,7 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
     _otpFocusNode2.dispose();
     _otpFocusNode3.dispose();
     _otpFocusNode4.dispose();
+    timer?.cancel();
     super.dispose();
   }
 
@@ -178,22 +211,67 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
   }
 
   Widget _buildResendOtp() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        const Text("Didn't receive the OTP?", style: TextStyle(color: Colors.black54)),
-        TextButton(
-          onPressed: () {
-            // TODO: Add logic to resend OTP
-            print('Resending OTP to ${widget.email}');
-          },
-          child: const Text(
-            'Resend OTP',
-            style: TextStyle(
-              color: primaryBlue,
-              fontWeight: FontWeight.bold,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Didn't receive the OTP?  ", style: TextStyle(color: Colors.black54)),
+            TextButton(
+              onPressed: () async {
+                _resetAndStartTimer();
+                bool responce = await ApiServices.sendOpt(email: widget.email);
+                if(responce){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      new SnackBar(
+                        content: Text("OTP resent! Please check your email for the code"),
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      )
+                  );
+                  print('Resending OTP to ${widget.email}');
+                }
+                else{
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      new SnackBar(
+                        content: Text("Unexpected error occurred"),
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      )
+                  );
+                  print('failed in Resending OTP to ${widget.email}');
+
+                }
+
+              },
+              child: const Text(
+                'Resend OTP',
+                style: TextStyle(
+                  color: primaryBlue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
+
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Otp will expire in: ", style: TextStyle(color: Colors.black54)),
+            Text(
+              _formattedTime,
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          ],
         ),
       ],
     );

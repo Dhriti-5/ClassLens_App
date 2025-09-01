@@ -1,5 +1,10 @@
+import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:classlens/login/teacher_signup_page.dart';
+import 'package:classlens/api/login_api.dart';
+import 'package:classlens/teacher_home/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -27,10 +32,27 @@ class _LoginPageState extends State<Login> {
   static const Color textColor = Color(0xFF333333);
 
   @override
+  void initState(){
+    super.initState();
+    _teacherPasswordController.clear();
+    _teacherEmailController.clear();
+    //checkRememberMe();
+  }
+  @override
   void dispose() {
     _teacherEmailController.dispose();
     _teacherPasswordController.dispose();
     super.dispose();
+  }
+  
+  void checkRememberMe() async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    //bool rememberMe = prefs.getBool("rememberMe") ?? false;
+    prefs.setBool("rememberMe", false);
+    bool rememberMe =false;
+
+    navigatorWithAnimation(context, Home());
+    return;
   }
 
   @override
@@ -175,12 +197,38 @@ class _LoginPageState extends State<Login> {
               ),
               onPressed: _isLoading
                   ? null
-                  : () {
+                  : () async {
                 if (_formKey.currentState!.validate()) {
-                  // Handle login logic here
+
                   print('Email: ${_teacherEmailController.text}');
-                  print('Password: ${_teacherPasswordController.text}');
-                  print("login");
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  bool responce = await ApiServices.validateTeacher(email: _teacherEmailController.text, password: _teacherPasswordController.text);
+
+                  if(responce){
+                    _teacherEmailController.clear();
+                    _teacherPasswordController.clear();
+                    final SharedPreferences pref = await SharedPreferences.getInstance();
+                    pref.setBool("rememberMe", isChecked);
+                    setState(() {
+                      _isLoading = false;
+                    });
+                    print("login");
+                    navigatorWithAnimation(context, Home());
+                  }
+                  else{
+                    setState(() {
+                      _isLoading = false;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invalid Credentials'),backgroundColor: Colors.red,),
+
+                    );
+                    print("login failed");
+                  }
+
+
                 }
               },
               child: _isLoading

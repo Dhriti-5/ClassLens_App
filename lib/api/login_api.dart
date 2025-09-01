@@ -161,4 +161,38 @@ class ApiServices{
       return Future.value(false);
     }
   }
+
+  static Future<bool> validateTeacher({required final String email, required final String password}) async{
+    const endpoint = "http://127.0.0.1:8000/api/validateTeacher";
+    final url = Uri.parse(endpoint);
+
+    const headers = {
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body=jsonEncode({
+      'email':email,
+      'password':password
+
+    });
+
+    try{
+      final responce = await http.post(url,headers: headers,body: body);
+
+      if(responce.statusCode==200){
+
+        print("teacher validated successfully");
+        return Future.value(true);
+      }
+      else{
+        print("teacher validation failed");
+        return Future.value(false);
+      }
+
+    }
+    catch(e){
+      print(e.toString());
+      return Future.value(false);
+    }
+  }
 }
