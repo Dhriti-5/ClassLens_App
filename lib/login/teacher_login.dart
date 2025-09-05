@@ -5,7 +5,6 @@ import 'package:classlens/api/login_api.dart';
 import 'package:classlens/teacher_home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -19,86 +18,95 @@ class _LoginPageState extends State<Login> {
   bool isChecked = false;
   bool _obscurePassword = true;
 
-
   final _teacherEmailController = TextEditingController();
   final _teacherPasswordController = TextEditingController();
 
-  // Color constants from your design
-  static const Color primaryBlue = Color(0xFF4A70E2);
-  static const Color accentYellow = Color(0xFFFFC107);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
-  static const Color textFieldFillColor = Color(0xFFF2F3F7);
-  static const Color textColor = Color(0xFF333333);
+  static const Color primaryBackgroundColor = Color(0xFFF0F4F8);
+  static const Color cardBackgroundColor = Colors.white;
+  static const Color primaryTextColor = Color(0xFF1A2533);
+  static const Color secondaryTextColor = Color(0xFF6C757D);
+  static const Color buttonColor = Color(0xFF2C3E50);
+  static const Color accentColor = Color(0xFF4A90E2);
+  static const Color textFieldFillColor = Color(0xFFF7F8F9);
+  static const Color borderColor = Color(0xFFE0E0E0);
+  static const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
+  static const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
+
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _teacherPasswordController.clear();
     _teacherEmailController.clear();
-    //checkRememberMe();
+    // checkRememberMe();
   }
+
   @override
   void dispose() {
     _teacherEmailController.dispose();
     _teacherPasswordController.dispose();
     super.dispose();
   }
-  
-  void checkRememberMe() async{
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    //bool rememberMe = prefs.getBool("rememberMe") ?? false;
-    prefs.setBool("rememberMe", false);
-    bool rememberMe =false;
 
+  void checkRememberMe() async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool("rememberMe", false);
     navigatorWithAnimation(context, Home());
-    return;
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(14.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.school, color: primaryBlue, size: 60),
-                const SizedBox(height: 8),
-                const Text(
-                  'ClassLens',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lato',
-                    color: textColor,
-                    letterSpacing: -1.0,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                _buildLoginCard(),
-                const SizedBox(height: 24),
-              ],
+      backgroundColor: primaryBackgroundColor,
+
+      body: Stack(
+        children: [
+          Positioned(
+            top: -screenSize.width * 0.3,
+            left: -screenSize.width * 0.3,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.45,
+              backgroundColor: circleColor1.withOpacity(0.5),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -screenSize.width * 0.4,
+            right: -screenSize.width * 0.4,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.5,
+              backgroundColor: circleColor2.withOpacity(0.5),
+            ),
+          ),
+
+          // --- Main Content ---
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: _buildLoginCard(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(28.0),
+      height: 550,
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20.0),
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(30.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 30,
             offset: const Offset(0, 10),
           ),
         ],
@@ -106,164 +114,164 @@ class _LoginPageState extends State<Login> {
       child: Form(
         key: _formKey,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.person, color: accentYellow, size: 48),
-            const SizedBox(height: 16),
+            // --- Header Text ---
+            const Text(
+              'ClassLens',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: secondaryTextColor,
+              ),
+            ),
+            const SizedBox(height: 12),
             const Text(
               'Welcome, Teacher',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Lato',
-                color: textColor,
+                color: primaryTextColor,
               ),
             ),
             const SizedBox(height: 32),
+
+            // --- Email Text Field ---
             TextFormField(
               controller: _teacherEmailController,
-              decoration:
-              _inputDecoration('University Email Address', Icons.email_outlined),
+              decoration: _inputDecoration('Email', Icons.email_outlined),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return "Please enter an email";
                 }
-                final bool emailValid = RegExp(
-                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                    .hasMatch(value);
-
-                final bool domainRegex = RegExp(
-                  r"^[a-zA-Z0-9._%+-]+@msubaroda\.ac\.in$",
-                ).hasMatch(value);
-
-                if(!emailValid){
-                  return "Please enter a valid email";
-                }
-                if (!domainRegex) {
+                if (!RegExp(r"^[a-zA-Z0-9._%+-]+@msubaroda\.ac\.in$").hasMatch(value)) {
                   return "Please enter a valid University email";
                 }
                 return null;
               },
             ),
             const SizedBox(height: 20),
+
+            // --- Password Text Field ---
             TextFormField(
               controller: _teacherPasswordController,
               decoration: _inputDecoration('Password', Icons.lock_outline).copyWith(
                 suffixIcon: IconButton(
-                  onPressed: (){
+                  onPressed: () {
                     setState(() {
-                      _obscurePassword=!_obscurePassword;
+                      _obscurePassword = !_obscurePassword;
                     });
                   },
-                  icon: Icon(_obscurePassword?Icons.visibility_off:Icons.visibility),
-                  color: Colors.black54,)
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: secondaryTextColor,
+                  ),
+                ),
               ),
               obscureText: _obscurePassword,
-              keyboardType: TextInputType.text,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return "Enter a password";
                 }
-                if(value.length >20){
-                 return "Password is too long";
+                if (value.length > 20) {
+                  return "Password is too long";
                 }
                 return null;
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+
+            // --- Remember Me & Forgot Password Row ---
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Checkbox(
-                    value: isChecked,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        isChecked = !isChecked;
-                      });
-                    }),
-                const Text("Remember Me"),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: isChecked,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isChecked = value ?? false;
+                          });
+                        },
+                        activeColor: accentColor,
+                        checkColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Remember Me",
+                      style: TextStyle(color: secondaryTextColor, fontSize: 14),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Implement forgot password logic
+                  },
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+
+            // --- Login Button ---
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBlue,
+                backgroundColor: buttonColor,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
-                elevation: 5,
-                shadowColor: primaryBlue.withOpacity(0.4),
+                elevation: 0,
               ),
-              onPressed: _isLoading
-                  ? null
-                  : () async {
-                if (_formKey.currentState!.validate()) {
-
-                  print('Email: ${_teacherEmailController.text}');
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  bool responce = await ApiServices.validateTeacher(email: _teacherEmailController.text, password: _teacherPasswordController.text);
-
-                  if(responce){
-                    _teacherEmailController.clear();
-                    _teacherPasswordController.clear();
-                    final SharedPreferences pref = await SharedPreferences.getInstance();
-                    pref.setBool("rememberMe", isChecked);
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    print("login");
-                    navigatorWithAnimation(context, Home());
-                  }
-                  else{
-                    setState(() {
-                      _isLoading = false;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid Credentials'),backgroundColor: Colors.red,),
-
-                    );
-                    print("login failed");
-                  }
-
-
-                }
-              },
+              onPressed: _isLoading ? null : _handleLogin,
               child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Login',
-                  style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  ? const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              )
+                  : const Text(
+                'Login',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Don't have a password?",
-                  style: TextStyle(color: Colors.black54, fontSize: 15),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    print("Navigating to the register page...");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TeacherSignUpPage()),
-                    );
-                  },
-                  child: Text(
-                    'Register!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue[700],
-                      fontWeight: FontWeight.bold,
+
+            // --- Registration Link ---
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TeacherSignUpPage()),
+                );
+              },
+              child: const Text.rich(
+                TextSpan(
+                  text: "Don't have an account? ",
+                  style: TextStyle(color: secondaryTextColor, fontSize: 15),
+                  children: [
+                    TextSpan(
+                      text: 'Register',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -271,21 +279,61 @@ class _LoginPageState extends State<Login> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
+  // --- Reusable Input Decoration ---
+  InputDecoration _inputDecoration(String hintText, IconData icon) {
     return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.black54, fontSize: 15),
-      prefixIcon: Icon(icon, color: Colors.black54, size: 23),
+      hintText: hintText,
+      hintStyle: const TextStyle(color: secondaryTextColor, fontSize: 15),
+      prefixIcon: Icon(icon, color: secondaryTextColor, size: 22),
       fillColor: textFieldFillColor,
       filled: true,
+      contentPadding: const EdgeInsets.all(20),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: const BorderSide(color: borderColor, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: const BorderSide(color: borderColor, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: primaryBlue, width: 2.0),
+        borderRadius: BorderRadius.circular(16.0),
+        borderSide: const BorderSide(color: accentColor, width: 2.0),
       ),
     );
+  }
+
+  // --- Login Logic Handler ---
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      bool response = await ApiServices.validateTeacher(
+          email: _teacherEmailController.text,
+          password: _teacherPasswordController.text);
+
+      if (mounted) { // Check if the widget is still in the tree
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (response) {
+          _teacherEmailController.clear();
+          _teacherPasswordController.clear();
+          final SharedPreferences pref = await SharedPreferences.getInstance();
+          pref.setBool("rememberMe", isChecked);
+          navigatorWithAnimation(context, Home());
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid Credentials'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }

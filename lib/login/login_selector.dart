@@ -1,126 +1,132 @@
+import 'package:classlens/login/teacher_login.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:classlens/login/teacher_login.dart';
-class LoginSelector extends StatefulWidget{
+
+
+const Color primaryBackgroundColor = Color(0xFFF0F4F8);
+const Color cardBackgroundColor = Colors.white;
+const Color primaryTextColor = Color(0xFF1A2533);
+const Color secondaryTextColor = Color(0xFF6C757D);
+const Color iconColorStudent = Color(0xFF2563EB);
+const Color iconColorTeacher = Color(0xFFF59E0B);
+const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
+const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
+
+class LoginSelector extends StatelessWidget {
   const LoginSelector({super.key});
 
   @override
-  State<LoginSelector> createState() => _LoginSelectorState();
-}
-
-class _LoginSelectorState extends State<LoginSelector> {
-  @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
 
-  return Scaffold(
-    backgroundColor: const Color(0xFFF9FAFB),
-
-    body: SafeArea(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
+    return Scaffold(
+      backgroundColor: primaryBackgroundColor,
+      body: Stack(
         children: [
-          //Top section
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0,bottom: 0.0,top: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 22,),
-
-                //logo placement
-                Icon(Icons.school,size: 60, color: const Color(0xFF2563EB)),
-                const SizedBox(width: 15,),
-
-                //APP NAME on TOP
-                Text(
-                  "ClassLens",
-                  style: GoogleFonts.poppins(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF111827)
-                  ),
-                ),
-              ],
+          Positioned(
+            top: -screenSize.width * 0.3,
+            left: -screenSize.width * 0.3,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.45,
+              backgroundColor: circleColor1.withOpacity(0.5),
+            ),
+          ),
+          Positioned(
+            bottom: -screenSize.width * 0.4,
+            right: -screenSize.width * 0.4,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.5,
+              backgroundColor: circleColor2.withOpacity(0.5),
             ),
           ),
 
-          //middle section
-          Column(
-            children: [
-              RoleCard(
-                  icon: Icons.class_,
-                  title: "Login as a Student",
-                  description:  "Access your courses, attendance, and grades",
-                  color: const Color(0xFF2563EB),
-                  onTap: (){
-                    // navigation to student login
-
-                    // final snackBar = SnackBar(
-                    //   content: const Text('Student login clicked'),
-                    //   action: SnackBarAction(label: 'undo', onPressed: (){
-                    //
-                    //   }),
-                    // );
-                    //
-                    // ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-
-                  }
-              ),
-              // const SizedBox(height: 5,),
-
-              RoleCard(
-                  icon: Icons.person,
-                  title: "Login as Teacher",
-                  description:  "Manage classes, track attendance, and insights",
-                  color: const Color(0xFFF59E0B),
-                  onTap: (){
-                    // navigation to teacher login
-                    navigatorWithAnimation(context, Login());
-                  }
-              ),
-
-            ],
-          ),
-
-          // Bottom section
-          Padding(
-            padding: const EdgeInsets.only(left: 27.0,bottom: 5.0),
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: (){
-                    // open help/support
-
-                  },
-
-                  child: Text(
-                    "Need help? Contact support",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
+          // --- Main Content ---
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(flex: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.school, size: 40, color: primaryTextColor),
+                      SizedBox(width: 12),
+                      Text(
+                        "ClassLens",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: primaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(flex: 1),
+                  const Text(
+                    "Choose Your Role",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                      color: secondaryTextColor,
                     ),
                   ),
-                ),
-                const SizedBox(height: 8,)
-              ],
+                  const SizedBox(height: 40),
+
+
+                  RoleCard(
+                    icon: Icons.book_outlined,
+                    title: "Login as a Student",
+                    description: "Access your courses, attendance, and grades",
+                    iconColor: iconColorStudent,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Student login coming soon!')),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  RoleCard(
+                    icon: Icons.person_outline,
+                    title: "Login as Teacher",
+                    description: "Manage classes, track attendance, and insights",
+                    iconColor: iconColorTeacher,
+                    onTap: () {
+                      navigatorWithAnimation(context, const Login());
+                    },
+                  ),
+                  const Spacer(flex: 3),
+
+                  // --- Footer ---
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      "Need help? Contact support",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: secondaryTextColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          )
+          ),
         ],
       ),
-
-    ),
-  );
+    );
   }
 }
 
-class RoleCard extends StatefulWidget{
+
+class RoleCard extends StatefulWidget {
   final IconData icon;
   final String title;
   final String description;
-  final Color color;
+  final Color iconColor;
   final VoidCallback onTap;
 
   const RoleCard({
@@ -128,75 +134,83 @@ class RoleCard extends StatefulWidget{
     required this.icon,
     required this.title,
     required this.description,
-    required this.color,
+    required this.iconColor,
     required this.onTap,
   });
+
   @override
   State<RoleCard> createState() => _RoleCardState();
 }
 
 class _RoleCardState extends State<RoleCard> {
+  bool _isPressed = false;
 
-  bool _isHovered = false;
+  void _onTapDown(TapDownDetails details) {
+    setState(() {
+      _isPressed = true;
+    });
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    setState(() {
+      _isPressed = false;
+    });
+
+    widget.onTap();
+  }
+
+  void _onTapCancel() {
+    setState(() {
+      _isPressed = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 10.0,bottom: 40.0),
-      child: InkWell(
-        onTap: widget.onTap,
-        onHover: (hovering){
-          setState(() {
-            _isHovered=hovering;
-          });
-        },
+    final double scale = _isPressed ? 0.96 : 1.0;
 
-        borderRadius: BorderRadius.circular(16),
-
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          width: MediaQuery.of(context).size.width * 0.85,
-          padding: const EdgeInsets.all(20),
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: _isHovered?[
+            color: cardBackgroundColor,
+            borderRadius: BorderRadius.circular(24.0),
+            boxShadow: [
               BoxShadow(
-                color: widget.color.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              )
-            ]:[
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              )
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
-
           child: Column(
             children: [
-              Icon(widget.icon, size: 40, color: widget.color,),
-              const SizedBox(height: 10,),
+              Icon(widget.icon, size: 40, color: widget.iconColor),
+              const SizedBox(height: 16),
               Text(
                 widget.title,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
+                style: const TextStyle(
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF111827),
+                  color: primaryTextColor,
                 ),
               ),
-
-              const SizedBox(height: 6,),
+              const SizedBox(height: 8),
               Text(
                 widget.description,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: Colors.grey[700],
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: secondaryTextColor,
+                  height: 1.4,
                 ),
               ),
             ],

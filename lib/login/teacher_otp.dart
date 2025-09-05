@@ -1,11 +1,20 @@
 import 'dart:async';
-
-import 'package:classlens/login/teacher_login.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:classlens/api/login_api.dart';
 import 'package:classlens/login/teacher_password_setter.dart';
+
+// --- SHARED COLOR & STYLE CONSTANTS ---
+const Color primaryBackgroundColor = Color(0xFFF0F4F8);
+const Color cardBackgroundColor = Colors.white;
+const Color primaryTextColor = Color(0xFF1A2533);
+const Color secondaryTextColor = Color(0xFF6C757D);
+const Color buttonColor = Color(0xFF2C3E50);
+const Color accentColor = Color(0xFFFFC107);
+const Color textFieldFillColor = Color(0xFFF7F8F9);
+const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
+const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
 class TeacherOtpPage extends StatefulWidget {
   final String email;
@@ -16,14 +25,13 @@ class TeacherOtpPage extends StatefulWidget {
 }
 
 class _TeacherOtpPageState extends State<TeacherOtpPage> {
-  // Controllers and FocusNodes for the 4 OTP boxes
   final _otpController1 = TextEditingController();
   final _otpController2 = TextEditingController();
   final _otpController3 = TextEditingController();
   final _otpController4 = TextEditingController();
 
-  static const int initialTimerSeconds=120;
-  late int secondsRemaining=initialTimerSeconds;
+  static const int initialTimerSeconds = 30;
+  late int secondsRemaining = initialTimerSeconds;
   Timer? timer;
 
   final _otpFocusNode1 = FocusNode();
@@ -31,44 +39,36 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
   final _otpFocusNode3 = FocusNode();
   final _otpFocusNode4 = FocusNode();
 
-  // Color constants for styling
-  static const Color primaryBlue = Color(0xFF4A70E2);
-  static const Color accentYellow = Color(0xFFFFC107);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
-  static const Color textFieldFillColor = Color(0xFFF2F3F7);
-  static const Color textColor = Color(0xFF333333);
-
   @override
   void initState() {
     super.initState();
-    Future<bool>responce = ApiServices.sendOpt(email: widget.email);
+    ApiServices.sendOpt(email: widget.email);
     _resetAndStartTimer();
   }
 
   void _resetAndStartTimer() {
     timer?.cancel();
     setState(() {
-      secondsRemaining=initialTimerSeconds;
+      secondsRemaining = initialTimerSeconds;
     });
 
-    timer=Timer.periodic(const Duration(seconds: 1), (timer){
-      if(secondsRemaining==0){
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (secondsRemaining == 0) {
         timer.cancel();
-      }
-      else{
-        setState(() {
-          secondsRemaining--;
-        });
+      } else {
+        if (mounted) {
+          setState(() {
+            secondsRemaining--;
+          });
+        }
       }
     });
   }
 
-  String get _formattedTime{
+  String get _formattedTime {
     final minutes = (secondsRemaining ~/ 60).toString().padLeft(2, '0');
     final seconds = (secondsRemaining % 60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
-
   }
 
   @override
@@ -92,17 +92,16 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
         _otpController4.text;
 
     if (otp.length == 4) {
-      print(int.parse(otp));
-      bool responce = await ApiServices.verifyOpt(email: widget.email, otp : int.parse(otp));
-      if(responce){
-        print("OTP verified");
-        Navigator.of(context)
-        ..pop()
-        ..pop();
-        navigatorWithAnimation(context, TeacherPasswordSetter(email: widget.email));
-      }
-      else{
-        print("OTP not verified");
+      bool response = await ApiServices.verifyOpt(email: widget.email, otp: int.parse(otp));
+      if (response) {
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigatorWithAnimation(context, TeacherPasswordSetter(email: widget.email));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid OTP. Please try again.'), backgroundColor: Colors.red),
+        );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -113,88 +112,87 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(14.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.dangerous, color: primaryBlue, size: 60),
-                const SizedBox(height: 8),
-                const Text(
-                  'Verification',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lato',
-                    color: textColor,
-                    letterSpacing: -1.0,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                _buildOtpCard(),
-                const SizedBox(height: 24),
-              ],
+      backgroundColor: primaryBackgroundColor,
+      body: Stack(
+        children: [
+          // --- Consistent Decorative Background Shapes ---
+          Positioned(
+            top: -screenSize.width * 0.3,
+            left: -screenSize.width * 0.3,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.45,
+              backgroundColor: circleColor1.withOpacity(0.5),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -screenSize.width * 0.4,
+            right: -screenSize.width * 0.4,
+            child: CircleAvatar(
+              radius: screenSize.width * 0.5,
+              backgroundColor: circleColor2.withOpacity(0.5),
+            ),
+          ),
+
+          // --- Main Content ---
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: _buildOtpCard(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildOtpCard() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(28.0),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20.0),
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(30.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 30,
             offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.password, color: accentYellow, size: 48),
+          const Icon(Icons.shield_outlined, color: accentColor, size: 48),
           const SizedBox(height: 16),
           const Text(
-            'Enter OTP',
+            'Enter Verification Code',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Lato',
-              color: textColor,
+              color: primaryTextColor,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             "An OTP has been sent to\n${widget.email}",
-            style: const TextStyle(color: Colors.black54, fontSize: 15, height: 1.5),
+            style: const TextStyle(color: secondaryTextColor, fontSize: 15, height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
           _buildOtpBoxes(),
-          const SizedBox(height: 16),
-          _buildResendOtp(),
           const SizedBox(height: 24),
-          _buildConfirmButton(),
+          _buildResendOtp(),
+          const SizedBox(height: 32),
+          AnimatedConfirmButton(
+            text: 'Confirm',
+            onPressed: _confirmOtp,
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildConfirmButton() {
-    return ElevatedButton(
-      style: _buttonStyle(),
-      onPressed: _confirmOtp,
-      child: const Text('Confirm',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -202,98 +200,79 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _otpTextField(context, _otpController1, _otpFocusNode1, true),
-        _otpTextField(context, _otpController2, _otpFocusNode2, false),
-        _otpTextField(context, _otpController3, _otpFocusNode3, false),
-        _otpTextField(context, _otpController4, _otpFocusNode4, false),
+        _otpTextField(_otpController1, _otpFocusNode1, true),
+        _otpTextField(_otpController2, _otpFocusNode2, false),
+        _otpTextField(_otpController3, _otpFocusNode3, false),
+        _otpTextField(_otpController4, _otpFocusNode4, false),
       ],
     );
   }
 
   Widget _buildResendOtp() {
+    bool canResend = secondsRemaining == 0;
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Didn't receive the OTP?  ", style: TextStyle(color: Colors.black54)),
+            const Text("Didn't receive code? ", style: TextStyle(color: secondaryTextColor)),
             TextButton(
-              onPressed: () async {
+              onPressed: canResend ? () async {
                 _resetAndStartTimer();
-                bool responce = await ApiServices.sendOpt(email: widget.email);
-                if(responce){
+                bool response = await ApiServices.sendOpt(email: widget.email);
+                if(response){
                   ScaffoldMessenger.of(context).showSnackBar(
-                      new SnackBar(
-                        content: Text("OTP resent! Please check your email for the code"),
+                      const SnackBar(
+                        content: Text("OTP resent! Please check your email."),
                         backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
                       )
                   );
-                  print('Resending OTP to ${widget.email}');
-                }
-                else{
+                } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      new SnackBar(
-                        content: Text("Unexpected error occurred"),
+                      const SnackBar(
+                        content: Text("An unexpected error occurred."),
                         backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
                       )
                   );
-                  print('failed in Resending OTP to ${widget.email}');
-
                 }
-
-              },
-              child: const Text(
-                'Resend OTP',
+              } : null,
+              child: Text(
+                'Resend',
                 style: TextStyle(
-                  color: primaryBlue,
+                  color: canResend ? buttonColor : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Otp will expire in: ", style: TextStyle(color: Colors.black54)),
-            Text(
-              _formattedTime,
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          ],
-        ),
+        if (!canResend)
+          Text(
+            "Resend available in: $_formattedTime",
+            style: const TextStyle(color: secondaryTextColor),
+          )
       ],
     );
   }
 
-  Widget _otpTextField(BuildContext context, TextEditingController controller, FocusNode focusNode, bool autoFocus) {
+  Widget _otpTextField(TextEditingController controller, FocusNode focusNode, bool autoFocus) {
     return SizedBox(
-      height: 60,
-      width: 50,
+      height: 64,
+      width: 58,
       child: TextFormField(
         autofocus: autoFocus,
         controller: controller,
         focusNode: focusNode,
         onChanged: (value) {
-          if (value.length == 1) {
+          if (value.length == 1 && focusNode != _otpFocusNode4) {
             FocusScope.of(context).nextFocus();
-          } else if (value.isEmpty) {
+          } else if (value.isEmpty && focusNode != _otpFocusNode1) {
             FocusScope.of(context).previousFocus();
           }
         },
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryTextColor),
         keyboardType: TextInputType.number,
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),
@@ -304,29 +283,94 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
           filled: true,
           counterText: '',
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(16.0),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: const BorderSide(color: primaryBlue, width: 2.0),
+            borderRadius: BorderRadius.circular(16.0),
+            borderSide: const BorderSide(color: buttonColor, width: 2.0),
           ),
         ),
       ),
     );
   }
+}
 
-  ButtonStyle _buttonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
-      minimumSize: const Size(double.infinity, 56),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
+// --- REUSABLE ANIMATED BUTTON WIDGET ---
+class AnimatedConfirmButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const AnimatedConfirmButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  State<AnimatedConfirmButton> createState() => _AnimatedConfirmButtonState();
+}
+
+class _AnimatedConfirmButtonState extends State<AnimatedConfirmButton> {
+  bool _isPressed = false;
+
+  void _onTapDown(TapDownDetails details) {
+    setState(() {
+      _isPressed = true;
+    });
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    setState(() {
+      _isPressed = false;
+    });
+    widget.onPressed();
+  }
+
+  void _onTapCancel() {
+    setState(() {
+      _isPressed = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = _isPressed ? 0.96 : 1.0;
+
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: buttonColor,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: buttonColor.withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              widget.text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
       ),
-      elevation: 5,
-      shadowColor: primaryBlue.withOpacity(0.4),
     );
   }
 }
-
