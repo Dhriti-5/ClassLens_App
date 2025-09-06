@@ -132,6 +132,38 @@ class ApiServices{
     }
   }
 
+  static Future<String> verifyEmail({required final String email}) async{
+    const endpoint = "http://127.0.0.1:8000/api/verifyEmail";
+    final url = Uri.parse(endpoint);
+
+    const headers ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body=jsonEncode({
+      'email':email
+    });
+
+    try{
+      final responce = await http.post(url,headers: headers,body: body);
+
+      if(responce.statusCode==200){
+        print("email verified");
+        return Future.value("verified");
+      }
+      else{
+        print("email not verified");
+        final jsonBody = jsonDecode(responce.body);
+        return Future.value(jsonBody['detail']?? "No message");
+      }
+
+    }
+    catch(e){
+      print(e.toString());
+      return Future.value(e.toString());
+    }
+  }
+
   static Future<bool> setPassword({required final String email, required final String password}) async{
     const endpoint = "http://127.0.0.1:8000/api/setPassword";
     final url = Uri.parse(endpoint);

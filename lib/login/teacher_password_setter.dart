@@ -123,19 +123,23 @@ class _TeacherPasswordSetterState extends State<TeacherPasswordSetter> {
           children: [
             const Icon(Icons.lock_reset, color: accentColor, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              'Set New Password',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: primaryTextColor,
+            FittedBox(
+              child: const Text(
+                'Set New Password',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: primaryTextColor,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              "Create a new, secure password for\n${widget.email}",
-              style: const TextStyle(color: secondaryTextColor, fontSize: 15, height: 1.5),
-              textAlign: TextAlign.center,
+            FittedBox(
+              child: Text(
+                "Create a new, secure password for\n${widget.email}",
+                style: const TextStyle(color: secondaryTextColor, fontSize: 15, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 32),
             _buildPasswordFields(),

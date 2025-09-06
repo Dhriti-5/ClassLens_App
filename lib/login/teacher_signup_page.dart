@@ -1,3 +1,4 @@
+import 'package:classlens/api/login_api.dart';
 import 'package:flutter/material.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:classlens/login/teacher_otp.dart';
@@ -149,10 +150,16 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
 
             AnimatedButton(
               text: 'Get OTP',
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  navigatorWithAnimation(
-                      context, TeacherOtpPage(email: _teacherEmailController.text));
+                 String response = await ApiServices.verifyEmail(email: _teacherEmailController.text);
+                 if(response=='verified'){
+                   navigatorWithAnimation(
+                       context, TeacherOtpPage(email: _teacherEmailController.text));
+                 }
+                 else{
+                   ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text(response)));
+                 }
                 }
               },
             ),
@@ -160,27 +167,33 @@ class _TeacherSignUpPageState extends State<TeacherSignUpPage> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child:
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Already have an account?',
-                      style: TextStyle(
-                        color: secondaryTextColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                FittedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FittedBox(
+                        child: const Text(
+                          'Already have an account?',
+                          style: TextStyle(
+                            color: secondaryTextColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 5,),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                      SizedBox(width: 5,),
+                      FittedBox(
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
             )
           ],

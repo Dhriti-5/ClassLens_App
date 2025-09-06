@@ -99,7 +99,6 @@ class _LoginPageState extends State<Login> {
   Widget _buildLoginCard() {
     return Container(
       padding: const EdgeInsets.all(28.0),
-      height: 550,
       decoration: BoxDecoration(
         color: cardBackgroundColor,
         borderRadius: BorderRadius.circular(30.0),
@@ -126,12 +125,14 @@ class _LoginPageState extends State<Login> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Welcome, Teacher',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: primaryTextColor,
+            FittedBox(
+              child: const Text(
+                'Welcome, Teacher',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: primaryTextColor,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -209,18 +210,18 @@ class _LoginPageState extends State<Login> {
                     ),
                   ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement forgot password logic
-                  },
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: accentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
+                // TextButton(
+                //   onPressed: () {
+                //     // TODO: Implement forgot password logic
+                //   },
+                //   child: const Text(
+                //     'Forgot Password?',
+                //     style: TextStyle(
+                //       color: accentColor,
+                //       fontWeight: FontWeight.w600,
+                //     ),
+                //   ),
+                // )
               ],
             ),
             const SizedBox(height: 24),
@@ -257,19 +258,21 @@ class _LoginPageState extends State<Login> {
                   MaterialPageRoute(builder: (context) => TeacherSignUpPage()),
                 );
               },
-              child: const Text.rich(
-                TextSpan(
-                  text: "Don't have an account? ",
-                  style: TextStyle(color: secondaryTextColor, fontSize: 15),
-                  children: [
-                    TextSpan(
-                      text: 'Register',
-                      style: TextStyle(
-                        color: accentColor,
-                        fontWeight: FontWeight.bold,
+              child: FittedBox(
+                child: const Text.rich(
+                  TextSpan(
+                    text: "Don't have an account? ",
+                    style: TextStyle(color: secondaryTextColor, fontSize: 15),
+                    children: [
+                      TextSpan(
+                        text: 'Register',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -53,23 +53,27 @@ class LoginSelector extends StatelessWidget {
                     children: const [
                       Icon(Icons.school, size: 40, color: primaryTextColor),
                       SizedBox(width: 12),
-                      Text(
-                        "ClassLens",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: primaryTextColor,
+                      FittedBox(
+                        child: Text(
+                          "ClassLens",
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: primaryTextColor,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const Spacer(flex: 1),
-                  const Text(
-                    "Choose Your Role",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      color: secondaryTextColor,
+                  FittedBox(
+                    child: const Text(
+                      "Choose Your Role",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w500,
+                        color: secondaryTextColor,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -99,14 +103,16 @@ class LoginSelector extends StatelessWidget {
                   const Spacer(flex: 3),
 
                   // --- Footer ---
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      "Need help? Contact support",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: secondaryTextColor,
-                        fontWeight: FontWeight.w500,
+                  FittedBox(
+                    child: TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        "Need help? Contact support",
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: secondaryTextColor,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -195,22 +201,26 @@ class _RoleCardState extends State<RoleCard> {
             children: [
               Icon(widget.icon, size: 40, color: widget.iconColor),
               const SizedBox(height: 16),
-              Text(
-                widget.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: primaryTextColor,
+              FittedBox(
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                widget.description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: secondaryTextColor,
-                  height: 1.4,
+              FittedBox(
+                child: Text(
+                  widget.description,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: secondaryTextColor,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],

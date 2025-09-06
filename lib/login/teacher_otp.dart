@@ -168,19 +168,23 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
         children: [
           const Icon(Icons.shield_outlined, color: accentColor, size: 48),
           const SizedBox(height: 16),
-          const Text(
-            'Enter Verification Code',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: primaryTextColor,
+          FittedBox(
+            child: const Text(
+              'Enter Verification Code',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: primaryTextColor,
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            "An OTP has been sent to\n${widget.email}",
-            style: const TextStyle(color: secondaryTextColor, fontSize: 15, height: 1.5),
-            textAlign: TextAlign.center,
+          FittedBox(
+            child: Text(
+              "An OTP has been sent to\n${widget.email}",
+              style: const TextStyle(color: secondaryTextColor, fontSize: 15, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 32),
           _buildOtpBoxes(),
@@ -215,7 +219,7 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Didn't receive code? ", style: TextStyle(color: secondaryTextColor)),
+            FittedBox(child: const Text("Didn't receive code? ", style: TextStyle(color: secondaryTextColor))),
             TextButton(
               onPressed: canResend ? () async {
                 _resetAndStartTimer();
@@ -236,11 +240,13 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
                   );
                 }
               } : null,
-              child: Text(
-                'Resend',
-                style: TextStyle(
-                  color: canResend ? buttonColor : Colors.grey,
-                  fontWeight: FontWeight.bold,
+              child: FittedBox(
+                child: Text(
+                  'Resend',
+                  style: TextStyle(
+                    color: canResend ? buttonColor : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -248,9 +254,11 @@ class _TeacherOtpPageState extends State<TeacherOtpPage> {
         ),
         const SizedBox(height: 8),
         if (!canResend)
-          Text(
-            "Resend available in: $_formattedTime",
-            style: const TextStyle(color: secondaryTextColor),
+          FittedBox(
+            child: Text(
+              "Resend available in: $_formattedTime",
+              style: const TextStyle(color: secondaryTextColor),
+            ),
           )
       ],
     );
@@ -360,12 +368,14 @@ class _AnimatedConfirmButtonState extends State<AnimatedConfirmButton> {
             ],
           ),
           child: Center(
-            child: Text(
-              widget.text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+            child: FittedBox(
+              child: Text(
+                widget.text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
