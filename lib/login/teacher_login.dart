@@ -49,20 +49,19 @@ class _LoginPageState extends State<Login> {
   }
 
   void checkRememberMe() async {
-
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool("rememberMe", false);
-    navigatorWithAnimation(context, Home());
+    if(mounted) {
+      navigatorWithAnimation(context, const Home());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: primaryBackgroundColor,
-
       body: Stack(
         children: [
           Positioned(
@@ -98,7 +97,8 @@ class _LoginPageState extends State<Login> {
 
   Widget _buildLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(28.0),
+      // --- EDITED: Optimized padding for a sleeker look ---
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
         color: cardBackgroundColor,
         borderRadius: BorderRadius.circular(30.0),
@@ -119,23 +119,21 @@ class _LoginPageState extends State<Login> {
             const Text(
               'ClassLens',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: secondaryTextColor,
               ),
             ),
-            const SizedBox(height: 12),
-            FittedBox(
-              child: const Text(
-                'Welcome, Teacher',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: primaryTextColor,
-                ),
+            const SizedBox(height: 8),
+            const Text(
+              'Welcome, Teacher',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: primaryTextColor,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
 
             // --- Email Text Field ---
             TextFormField(
@@ -152,7 +150,8 @@ class _LoginPageState extends State<Login> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 18),
 
             // --- Password Text Field ---
             TextFormField(
@@ -181,50 +180,33 @@ class _LoginPageState extends State<Login> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // --- Remember Me & Forgot Password Row ---
+            // --- Remember Me Row ---
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Checkbox(
-                        value: isChecked,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            isChecked = value ?? false;
-                          });
-                        },
-                        activeColor: accentColor,
-                        checkColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Remember Me",
-                      style: TextStyle(color: secondaryTextColor, fontSize: 14),
-                    ),
-                  ],
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: isChecked,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        isChecked = value ?? false;
+                      });
+                    },
+                    activeColor: accentColor,
+                    checkColor: Colors.white,
+                  ),
                 ),
-                // TextButton(
-                //   onPressed: () {
-                //     // TODO: Implement forgot password logic
-                //   },
-                //   child: const Text(
-                //     'Forgot Password?',
-                //     style: TextStyle(
-                //       color: accentColor,
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //   ),
-                // )
+                const SizedBox(width: 8),
+                const Text(
+                  "Remember Me",
+                  style: TextStyle(color: secondaryTextColor, fontSize: 14),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // --- Login Button ---
             ElevatedButton(
@@ -248,31 +230,29 @@ class _LoginPageState extends State<Login> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // --- Registration Link ---
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TeacherSignUpPage()),
+                  MaterialPageRoute(builder: (context) => const TeacherSignUpPage()),
                 );
               },
-              child: FittedBox(
-                child: const Text.rich(
-                  TextSpan(
-                    text: "Don't have an account? ",
-                    style: TextStyle(color: secondaryTextColor, fontSize: 15),
-                    children: [
-                      TextSpan(
-                        text: 'Register',
-                        style: TextStyle(
-                          color: accentColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: const Text.rich(
+                TextSpan(
+                  text: "Don't have an account? ",
+                  style: TextStyle(color: secondaryTextColor, fontSize: 15),
+                  children: [
+                    TextSpan(
+                      text: 'Register',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -290,7 +270,8 @@ class _LoginPageState extends State<Login> {
       prefixIcon: Icon(icon, color: secondaryTextColor, size: 22),
       fillColor: textFieldFillColor,
       filled: true,
-      contentPadding: const EdgeInsets.all(20),
+
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.0),
         borderSide: const BorderSide(color: borderColor, width: 1.5),
@@ -317,7 +298,7 @@ class _LoginPageState extends State<Login> {
           email: _teacherEmailController.text,
           password: _teacherPasswordController.text);
 
-      if (mounted) { // Check if the widget is still in the tree
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
@@ -327,7 +308,7 @@ class _LoginPageState extends State<Login> {
           _teacherPasswordController.clear();
           final SharedPreferences pref = await SharedPreferences.getInstance();
           pref.setBool("rememberMe", isChecked);
-          navigatorWithAnimation(context, Home());
+          navigatorWithAnimation(context, const Home());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -340,3 +321,4 @@ class _LoginPageState extends State<Login> {
     }
   }
 }
+
