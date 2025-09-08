@@ -194,7 +194,7 @@ class ApiServices{
     }
   }
 
-  static Future<bool> validateTeacher({required final String email, required final String password}) async{
+  static Future<Map<String,dynamic>> validateTeacher({required final String email, required final String password}) async{
     const endpoint = "http://127.0.0.1:8000/api/validateTeacher";
     final url = Uri.parse(endpoint);
 
@@ -210,21 +210,25 @@ class ApiServices{
 
     try{
       final response = await http.post(url,headers: headers,body: body);
-
+      String jsonBody = response.body;
+      String teacherName = jsonDecode(jsonBody)['teacher_name'];
+      String message = jsonDecode(jsonBody)['message'];
       if(response.statusCode==200){
 
         print("teacher validated successfully");
-        return Future.value(true);
+
+        print(message);
+        return {'status':true,'teacherName':teacherName,'message':message};
       }
       else{
         print("teacher validation failed");
-        return Future.value(false);
+        return {'status':false,'teacherName':'teacher','message':message};
       }
 
     }
     catch(e){
       print(e.toString());
-      return Future.value(false);
+      return {'status':false,'teacherName':'teacher','message':'exception'};
     }
   }
 }

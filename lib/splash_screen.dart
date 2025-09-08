@@ -1,7 +1,9 @@
+import 'package:classlens/home/teacher_home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'login/login_selector.dart';
 import 'package:lottie/lottie.dart';
 import 'page_animations/slide_animation.dart';
+import 'package:classlens/global/global.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -60,9 +62,16 @@ class _SplashScreenState extends State<SplashScreen>
                             _controller
                               ..duration = composition.duration
                               ..forward().whenComplete(() {
-                                Future.delayed(const Duration(seconds: 3), () {
+                                Future.delayed(const Duration(seconds: 3), () async {
                                   if(mounted){
-                                      splashScreenNavigator(context, const LoginSelector());
+                                      bool isLoggedIn = await getRememberMe();
+                                      if(isLoggedIn){
+                                        Navigator.push(context, MaterialPageRoute(builder: (context)=> const Home()));
+                                      }
+                                      else {
+                                        splashScreenNavigator(
+                                            context, const LoginSelector());
+                                      }
                                   }
                                 });
                               });

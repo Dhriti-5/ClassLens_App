@@ -4,6 +4,7 @@ import 'package:classlens/login/teacher/teacher_signup_page.dart';
 import 'package:classlens/api/login_api.dart';
 import 'package:classlens/home/teacher_home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classlens/global/global.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -15,7 +16,7 @@ class Login extends StatefulWidget {
 class _LoginPageState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  bool isChecked = false;
+  bool isChecked = true;
   bool _obscurePassword = true;
 
   final _teacherEmailController = TextEditingController();
@@ -38,7 +39,6 @@ class _LoginPageState extends State<Login> {
     super.initState();
     _teacherPasswordController.clear();
     _teacherEmailController.clear();
-    // checkRememberMe();
   }
 
   @override
@@ -46,14 +46,6 @@ class _LoginPageState extends State<Login> {
     _teacherEmailController.dispose();
     _teacherPasswordController.dispose();
     super.dispose();
-  }
-
-  void checkRememberMe() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool("rememberMe", false);
-    if(mounted) {
-      navigatorWithAnimation(context, const Home());
-    }
   }
 
   @override
@@ -294,7 +286,7 @@ class _LoginPageState extends State<Login> {
         _isLoading = true;
       });
 
-      bool response = await ApiServices.validateTeacher(
+      final result = await ApiServices.validateTeacher(
           email: _teacherEmailController.text,
           password: _teacherPasswordController.text);
 
@@ -303,12 +295,12 @@ class _LoginPageState extends State<Login> {
           _isLoading = false;
         });
 
-        if (response) {
+        if (result['status']) {
           _teacherEmailController.clear();
           _teacherPasswordController.clear();
           final SharedPreferences pref = await SharedPreferences.getInstance();
           pref.setBool("rememberMe", isChecked);
-          navigatorWithAnimation(context, const Home());
+          navigatorWithAnimation(context, Home(teacherName: result['teacherName'] as String?),);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

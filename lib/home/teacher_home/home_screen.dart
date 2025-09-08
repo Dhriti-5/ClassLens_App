@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classlens/login/login_selector.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -16,7 +18,8 @@ const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final String? teacherName;
+  const Home({Key?key, this.teacherName}):super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
@@ -28,7 +31,7 @@ class _HomeState extends State<Home> {
     setState(() {
       _selectedIndex = index;
     });
-    // TODO: Add navigation logic for other tabs if needed
+
   }
 
 
@@ -75,10 +78,14 @@ class _HomeState extends State<Home> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text('Logout', style: TextStyle(fontSize: 16)),
-              onPressed: () {
-                // TODO: Implement your actual logout logic here
+              onPressed: () async {
+
                 print("Logout confirmed");
                 Navigator.of(dialogContext).pop();
+                SharedPreferences pref = await SharedPreferences.getInstance();
+                pref.setBool("rememberMe", false);
+                Navigator.of(context).pop();
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>const LoginSelector()));
               },
             ),
           ],
@@ -169,8 +176,8 @@ class _HomeState extends State<Home> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      "Welcome, Teacher!",
+                    child: Text(
+                      "${widget.teacherName}",
                       style: TextStyle(
                         color: primaryTextColor,
                         fontWeight: FontWeight.bold,
@@ -259,7 +266,7 @@ class TakeAttendanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
         color: cardBackgroundColor,

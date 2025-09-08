@@ -1,6 +1,7 @@
 import 'package:classlens/login/teacher/teacher_login.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
+import 'package:classlens/global/global.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -12,8 +13,19 @@ const Color iconColorTeacher = Color(0xFFF59E0B);
 const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
 const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
-class LoginSelector extends StatelessWidget {
+class LoginSelector extends StatefulWidget {
   const LoginSelector({super.key});
+
+  @override
+  State<LoginSelector> createState() => _LoginSelectorState();
+
+}
+
+class _LoginSelectorState extends State<LoginSelector> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
