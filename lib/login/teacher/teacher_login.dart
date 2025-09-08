@@ -1,8 +1,8 @@
 import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
-import 'package:classlens/login/teacher_signup_page.dart';
+import 'package:classlens/login/teacher/teacher_signup_page.dart';
 import 'package:classlens/api/login_api.dart';
-import 'package:classlens/teacher_home/home_screen.dart';
+import 'package:classlens/home/teacher_home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {

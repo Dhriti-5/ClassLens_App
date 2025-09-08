@@ -3,7 +3,7 @@ import 'package:classlens/page_animations/slide_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:classlens/api/login_api.dart';
-import 'package:classlens/login/teacher_password_setter.dart';
+import 'package:classlens/login/teacher/teacher_password_setter.dart';
 
 // --- SHARED COLOR & STYLE CONSTANTS ---
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);

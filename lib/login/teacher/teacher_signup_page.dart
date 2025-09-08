@@ -1,7 +1,7 @@
 import 'package:classlens/api/login_api.dart';
 import 'package:flutter/material.dart';
 import 'package:classlens/page_animations/slide_animation.dart';
-import 'package:classlens/login/teacher_otp.dart';
+import 'package:classlens/login/teacher/teacher_otp.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);

@@ -11,17 +11,17 @@ class ApiServices{
 
     try{
 
-      final responce = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(apiUrl));
 
-      if(responce.statusCode == 200){
-        final List<dynamic> jsonData = jsonDecode(responce.body);
+      if(response.statusCode == 200){
+        final List<dynamic> jsonData = jsonDecode(response.body);
 
         return jsonData.map(
                 (json) => Departments.fromJson(json as Map<String, dynamic>)
         ).toList();
       }
       else{
-        throw Exception('Failed to load Departments${responce.statusCode}');
+        throw Exception('Failed to load Departments${response.statusCode}');
       }
 
     }
@@ -49,13 +49,13 @@ class ApiServices{
        "departmentID":departmentID
      });
 
-     final responce = await http.post(
+     final response = await http.post(
        url,
        headers: headers,
        body: body
      );
 
-     if(responce.statusCode==201){
+     if(response.statusCode==201){
        print('Sign up successful!');
        return "success";
      }
@@ -84,9 +84,9 @@ class ApiServices{
         "email":email
       });
 
-      final responce = await http.post(url,headers: headers,body: body);
+      final response = await http.post(url,headers: headers,body: body);
 
-      if(responce.statusCode==200){
+      if(response.statusCode==200){
         print("mail sent");
         return Future.value(true);
       }
@@ -116,9 +116,9 @@ class ApiServices{
         "otp":otp
       });
 
-      final responce = await http.post(url,headers: headers,body: body);
+      final response = await http.post(url,headers: headers,body: body);
 
-      if(responce.statusCode==200){
+      if(response.statusCode==200){
         print("otp verified");
         return Future.value(true);
       }
@@ -145,15 +145,15 @@ class ApiServices{
     });
 
     try{
-      final responce = await http.post(url,headers: headers,body: body);
+      final response = await http.post(url,headers: headers,body: body);
 
-      if(responce.statusCode==200){
+      if(response.statusCode==200){
         print("email verified");
         return Future.value("verified");
       }
       else{
         print("email not verified");
-        final jsonBody = jsonDecode(responce.body);
+        final jsonBody = jsonDecode(response.body);
         return Future.value(jsonBody['detail']?? "No message");
       }
 
@@ -178,9 +178,9 @@ class ApiServices{
     });
 
     try{
-      final responce = await http.post(url,headers: headers,body: body);
+      final response = await http.post(url,headers: headers,body: body);
 
-      if(responce.statusCode==200){
+      if(response.statusCode==200){
         print("otp verified");
         return Future.value(true);
       }
@@ -209,9 +209,9 @@ class ApiServices{
     });
 
     try{
-      final responce = await http.post(url,headers: headers,body: body);
+      final response = await http.post(url,headers: headers,body: body);
 
-      if(responce.statusCode==200){
+      if(response.statusCode==200){
 
         print("teacher validated successfully");
         return Future.value(true);
