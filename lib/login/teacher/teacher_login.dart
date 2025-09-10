@@ -300,6 +300,7 @@ class _LoginPageState extends State<Login> {
           _teacherPasswordController.clear();
           final SharedPreferences pref = await SharedPreferences.getInstance();
           pref.setBool("rememberMe", isChecked);
+          pref.setString("teacherName", result['teacherName']);
           navigatorWithAnimation(context, Home(teacherName: result['teacherName'] as String?),);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

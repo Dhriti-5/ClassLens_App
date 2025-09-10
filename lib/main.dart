@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
+import 'package:classlens/global/global.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  userName = await getUserName();
   runApp(MyApp());
 }
 

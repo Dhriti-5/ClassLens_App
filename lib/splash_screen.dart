@@ -65,6 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 Future.delayed(const Duration(seconds: 3), () async {
                                   if(mounted){
                                       bool isLoggedIn = await getRememberMe();
+
                                       if(isLoggedIn){
                                         Navigator.push(context, MaterialPageRoute(builder: (context)=> const Home()));
                                       }

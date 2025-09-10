@@ -2,6 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:classlens/login/login_selector.dart';
+import 'package:classlens/global/global.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -27,13 +30,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  String? teacherName;
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
   }
-
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -84,6 +88,7 @@ class _HomeState extends State<Home> {
                 Navigator.of(dialogContext).pop();
                 SharedPreferences pref = await SharedPreferences.getInstance();
                 pref.setBool("rememberMe", false);
+                pref.remove("teacherName");
                 Navigator.of(context).pop();
                 Navigator.push(context, MaterialPageRoute(builder: (context)=>const LoginSelector()));
               },
@@ -94,6 +99,22 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Future<void> _requestCameraPermission() async {
+    final status = await Permission.camera.request();
+
+    if(status.isGranted){
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission granted")));
+      print("Camera permission granted");
+    }
+    else if(status.isDenied){
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission denied")));
+      print("Camera permission denied");
+    }
+    else if(status.isPermanentlyDenied){
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission denied")));
+      print("Camera permission permanently denied");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,14 +153,14 @@ class _HomeState extends State<Home> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          TakeAttendanceCard(),
+                        children: [
+                          TakeAttendanceCard(onPressed: _requestCameraPermission,),
 
-                          SizedBox(height: 24),
-                          RecentActivitySection(),
-                          SizedBox(height: 24),
-                          MyClassesSection(),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 24),
+                          const RecentActivitySection(),
+                          const SizedBox(height: 24),
+                          const MyClassesSection(),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -177,7 +198,7 @@ class _HomeState extends State<Home> {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "${widget.teacherName}",
+                      widget.teacherName??userName,
                       style: TextStyle(
                         color: primaryTextColor,
                         fontWeight: FontWeight.bold,
@@ -259,9 +280,9 @@ class _HomeState extends State<Home> {
   }
 }
 
-
 class TakeAttendanceCard extends StatelessWidget {
-  const TakeAttendanceCard({super.key});
+  final VoidCallback onPressed;
+  const TakeAttendanceCard({super.key,required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -301,9 +322,7 @@ class TakeAttendanceCard extends StatelessWidget {
           ElevatedButton.icon(
             icon: const Icon(Icons.camera),
             label: const Text('Take Attendance'),
-            onPressed: () {
-              // TODO: Implement navigation to camera/scan page
-            },
+            onPressed: onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: accentColor,
               foregroundColor: Colors.white,
