@@ -1,0 +1,484 @@
+import 'dart:io';
+
+import 'package:classlens/api/api.dart';
+import 'package:classlens/data_models/departments.dart';
+import 'package:classlens/data_models/subjects.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+// Using a consistent color palette
+const Color primaryBackgroundColor = Color(0xFFF0F4F8);
+const Color cardBackgroundColor = Colors.white;
+const Color primaryTextColor = Color(0xFF1A2533);
+const Color secondaryTextColor = Color(0xFF6C757D);
+const Color accentColor = Color(0xFF1A2533);
+const Color buttonColor = Color(0xFF2C3E50);
+const Color attentionColor = Color(0xFFE53935);
+const Color borderColor = Color(0xFFE8EBF0);
+
+class AttendanceUploadScreen extends StatefulWidget {
+  const AttendanceUploadScreen({super.key});
+
+  @override
+  State<AttendanceUploadScreen> createState() => _AttendanceUploadScreenState();
+}
+
+class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
+  XFile? _imageFile;
+  String? _selectedDepartment;
+  String? _selectedSubject;
+  String? _selectedYear;
+  String? _selectedSemester;
+  bool _isLoading = false;
+  late Future<List<Departments>> _departments;
+  List<Subjects> _subjects = [];
+  final List<String> _years = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  final List<String> _semesters = ['Semester 1', 'Semester 2'];
+  bool _isSubjectsLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _departments = ApiServices.getDepartments();
+  }
+
+  Future<void> _fetchSubjects() async{
+    if(_selectedDepartment!=null && _selectedSemester!=null && _selectedYear!=null){
+      setState(() {
+        _isSubjectsLoading=true;
+        _selectedSubject=null;
+        _subjects=[];
+      });
+      final int updatedYear = int.parse(_selectedYear!.replaceAll(RegExp(r'[^0-9]'), ''));
+      final int updatedSemester = int.parse(_selectedSemester!.replaceAll(RegExp(r'[^0-9]'), ''));
+      print(updatedSemester);
+      print(_selectedDepartment!+_selectedSemester!+_selectedYear!);
+      try{
+        final List<Subjects> fetchedSubject = await ApiServices.getSubjects(
+            departmentName: _selectedDepartment!,
+            year: updatedYear,
+            semester: updatedSemester
+        );
+
+        setState(() {
+          _isSubjectsLoading=false;
+          _subjects= fetchedSubject;
+        });
+      }
+      catch(e){
+        setState(() { _isSubjectsLoading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error fetching subjects: ${e.toString()}'))
+        );
+        print(e.toString());
+      }
+
+
+    }
+  }
+
+
+  Future<void> _pickImage(ImageSource source) async {
+    Navigator.of(context).pop();
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _imageFile = null;
+    });
+  }
+
+  void _showImageSourceActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cardBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const FittedBox(
+                child: Text(
+                  'Select Image Source',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library_outlined,
+                  color: accentColor,
+                ),
+
+                title: const Text('Choose from Gallery'),
+                onTap: () => _pickImage(ImageSource.gallery),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(
+                  Icons.camera_alt_outlined,
+                  color: accentColor,
+                ),
+                title: const Text('Take a Photo'),
+                onTap: () => _pickImage(ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submitAttendance() {
+    if (_imageFile == null ||
+        _selectedDepartment == null ||
+        _selectedYear == null ||
+        _selectedSemester == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete all fields to proceed.'),
+          backgroundColor: attentionColor,
+        ),
+      );
+      return;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: primaryBackgroundColor,
+      appBar: AppBar(
+        title: const FittedBox(
+          child: Text(
+            'Mark Attendance',
+            style: TextStyle(
+              color: primaryTextColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: primaryTextColor),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildImagePickerBox(),
+            const SizedBox(height: 32),
+            const FittedBox(
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'Class Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryTextColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FutureBuilder<List<Departments>>(
+              future: _departments,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Text('Unable to fetch departments: ${snapshot.error}');
+                }
+                if (snapshot.hasData) {
+                  final List<Departments> departmentsList = snapshot.data!;
+                  final List<String> departmentNames = departmentsList
+                      .map((department) => department.departmentName)
+                      .toList();
+                  return Column(
+                    children: [
+                      _buildDropdown(
+                        icon: Icons.school_outlined,
+                        hint: 'Department',
+                        value: _selectedDepartment,
+                        items: departmentNames,
+
+                        onChanged: (value) {
+                          setState(() => _selectedDepartment = value);
+                          _fetchSubjects();
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdown(
+                        icon: Icons.format_list_numbered,
+                        hint: 'Year',
+                        value: _selectedYear,
+                        items: _years,
+                        onChanged: (value) {
+                          setState(() => _selectedYear = value);
+                          _fetchSubjects();
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdown(
+                        icon: Icons.calendar_today_outlined,
+                        hint: 'Semester',
+                        value: _selectedSemester,
+                        items: _semesters,
+                        onChanged: (value) {
+                          setState(() => _selectedSemester = value);
+                          _fetchSubjects();
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      if (_isSubjectsLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                          child: CircularProgressIndicator(),
+                        )
+                      else
+                        _buildDropdown(
+                          icon: Icons.subject,
+                          hint: 'Subject',
+                          value: _selectedSubject,
+                          items: _subjects.map((s) => s.name).toList(),
+                          onChanged: _subjects.isEmpty
+                              ? null
+                              : (value) {
+                            setState(() => _selectedSubject = value);
+                          },
+                        ),
+                      const SizedBox(height: 32),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildSubmitButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePickerBox() {
+    return GestureDetector(
+      onTap: _imageFile == null ? _showImageSourceActionSheet : null,
+      child: DottedBorder(
+        color: secondaryTextColor.withOpacity(0.5),
+        strokeWidth: 2,
+        dashPattern: const [8, 6],
+        borderType: BorderType.RRect,
+        radius: const Radius.circular(24),
+        child: Container(
+          height: 220,
+          width: double.infinity,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: _imageFile == null
+                ? cardBackgroundColor
+                : Colors.transparent,
+          ),
+          child: _imageFile == null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 60,
+                          color: accentColor.withOpacity(0.8),
+                        ),
+                        const SizedBox(height: 12),
+                        // MODIFIED: Wrapped with FittedBox
+                        const FittedBox(
+                          child: Text(
+                            'Select Attendance Image',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: primaryTextColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // MODIFIED: Wrapped with FittedBox
+                        FittedBox(
+                          child: Text(
+                            'Tap here to upload or take a photo',
+                            style: TextStyle(
+                              color: secondaryTextColor.withOpacity(0.8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(File(_imageFile!.path), fit: BoxFit.cover),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.cancel,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        onPressed: _removeImage,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black.withOpacity(0.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required IconData icon,
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?>? onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      isExpanded: true,
+      items: items
+          .map(
+            (item) => DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          )
+          .toList(),
+      selectedItemBuilder: (BuildContext context) {
+        return items.map<Widget>((String item) {
+          return Text(
+            item,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          );
+        }).toList();
+      },
+      onChanged: onChanged,
+
+      dropdownColor: cardBackgroundColor,
+      borderRadius: BorderRadius.circular(16.0),
+
+      icon: const Icon(
+        Icons.arrow_drop_down_rounded,
+        color: secondaryTextColor,
+      ),
+      decoration: InputDecoration(
+        labelText: hint,
+        labelStyle: const TextStyle(color: secondaryTextColor),
+        floatingLabelStyle: const TextStyle(
+          color: accentColor,
+          fontWeight: FontWeight.bold,
+        ),
+
+        prefixIcon: Icon(icon, color: accentColor),
+
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: accentColor, width: 2.0),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        color: buttonColor,
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isLoading ? null : _submitAttendance,
+          borderRadius: BorderRadius.circular(16.0),
+          child: Container(
+            height: 56,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            // Padding for safety
+            child: _isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                // MODIFIED: Wrapped with FittedBox
+                : const FittedBox(
+                    child: Text(
+                      'Submit Attendance',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}

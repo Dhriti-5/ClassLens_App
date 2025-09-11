@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:classlens/data_models/subjects.dart';
 import 'package:http/http.dart' as http;
 import 'package:classlens/data_models/departments.dart';
 
@@ -15,10 +16,8 @@ class ApiServices{
 
       if(response.statusCode == 200){
         final List<dynamic> jsonData = jsonDecode(response.body);
-
-        return jsonData.map(
-                (json) => Departments.fromJson(json as Map<String, dynamic>)
-        ).toList();
+        List<Departments> departmentList = jsonData.map((json)=> Departments.fromJson(json as Map<String,dynamic>)).toList();
+        return departmentList;
       }
       else{
         throw Exception('Failed to load Departments${response.statusCode}');
@@ -209,6 +208,7 @@ class ApiServices{
     });
 
     try{
+
       final response = await http.post(url,headers: headers,body: body);
       String jsonBody = response.body;
       String teacherName = jsonDecode(jsonBody)['teacher_name'];
@@ -229,6 +229,44 @@ class ApiServices{
     catch(e){
       print(e.toString());
       return {'status':false,'teacherName':'teacher','message':'exception'};
+    }
+  }
+
+  static Future<List<Subjects>> getSubjects({required final String departmentName,required final int year, required final int semester}) async{
+    const endpoint = 'http://127.0.0.1:8000/api/getSubjectDetails';
+    final url = Uri.parse(endpoint);
+
+
+    const headers = {
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body = jsonEncode({
+      'department':departmentName,
+      'year':year,
+      'semester':semester
+    });
+
+    try{
+
+      final response = await http.post(
+          url,
+          headers: headers,
+          body: body
+      );
+      if(response.statusCode==200){
+        final List<dynamic> jsonData = jsonDecode(response.body)['subjects'];
+        return jsonData.map((json)=>Subjects.fromJson(json)).toList();
+      }
+      else{
+        String message = jsonDecode(response.body)['detail'];
+        print(message);
+        throw Exception('Failed to load subjects: $message');
+      }
+    }
+    catch(e){
+      print(e.toString());
+      throw Exception('Failed to connect to the server: $e');
     }
   }
 }

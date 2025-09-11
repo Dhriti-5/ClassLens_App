@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:classlens/login/login_selector.dart';
 import 'package:classlens/global/global.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:classlens/home/teacher_home/take_attendance.dart';
+import '../../page_animations/slide_animation.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -104,6 +105,7 @@ class _HomeState extends State<Home> {
 
     if(status.isGranted){
       ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission granted")));
+      navigatorWithAnimation(context,AttendanceUploadScreen());
       print("Camera permission granted");
     }
     else if(status.isDenied){
