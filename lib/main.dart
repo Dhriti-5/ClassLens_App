@@ -1,11 +1,20 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'package:classlens/global/global.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   userName = await getUserName();
-  runApp(MyApp());
+  runApp(
+    ProviderScope(
+      child: DevicePreview(
+        enabled: true,
+          builder: (context)=>MyApp()
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget{

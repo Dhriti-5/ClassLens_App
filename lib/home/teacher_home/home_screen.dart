@@ -1,11 +1,16 @@
 import 'dart:ui';
+import 'package:classlens/global/providers/task_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:classlens/login/login_selector.dart';
 import 'package:classlens/global/global.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:classlens/home/teacher_home/take_attendance.dart';
+import '../../data_models/task_status.dart';
+import '../../global/providers/task_manager_provider.dart';
 import '../../page_animations/slide_animation.dart';
+import 'package:classlens/home/teacher_home/widgets/notification_icon.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -21,17 +26,18 @@ const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
 const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
 
-class Home extends StatefulWidget {
+class Home extends ConsumerStatefulWidget {
   final String? teacherName;
-  const Home({Key?key, this.teacherName}):super(key: key);
+  const Home({super.key, this.teacherName});
 
   @override
-  State<Home> createState() => _HomeState();
+  ConsumerState<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends ConsumerState<Home> {
   int _selectedIndex = 0;
   String? teacherName;
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -103,26 +109,75 @@ class _HomeState extends State<Home> {
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
 
-    if(status.isGranted){
-      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission granted")));
-      navigatorWithAnimation(context,AttendanceUploadScreen());
-      print("Camera permission granted");
+    if(status.isGranted && mounted){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Camera permission granted")));
+      final result = await navigatorWithAnimation<String>(context,AttendanceUploadScreen());
+      if(result!=null && mounted){
+            if(result.startsWith("Error")){
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(result), backgroundColor: Colors.red),
+              );
+            }
+            else{
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Attendance submitted successfully!"), backgroundColor: Colors.green),
+              );
+              final taskID = result;
+
+              // start notification tracking with taskID
+              ref.read(taskManagerProvider.notifier).addTask(taskID);
+            }
+      }
     }
-    else if(status.isDenied){
-      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission denied")));
-      print("Camera permission denied");
+    else if(status.isDenied && mounted){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Camera permission denied")));
+
     }
-    else if(status.isPermanentlyDenied){
-      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text("Camera permission denied")));
-      print("Camera permission permanently denied");
+    else if(status.isPermanentlyDenied && mounted){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Camera permission denied")));
+
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final tasks = ref.watch(taskManagerProvider);
+    for (final task in tasks) {
+      if (!task.isCompleted) {
+        ref.listen<AsyncValue<TaskStatus>>(taskStatusProvider(task.taskID), (previous, next) {
+          final status = next.value;
+          if (status != null) {
+
+            ref.read(taskManagerProvider.notifier).updateTaskStatus(task.taskID, status);
+          }
+        });
+      }
+    }
+
+
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: primaryBackgroundColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // This button simulates a task completing.
+          final taskId = "test-task-${DateTime.now().millisecondsSinceEpoch}";
+
+          // 1. Add a new task
+          ref.read(taskManagerProvider.notifier).addTask(taskId);
+
+          // 2. After 2 seconds, update its status to SUCCESS
+          Future.delayed(const Duration(seconds: 10), () {
+            ref.read(taskManagerProvider.notifier).updateTaskStatus(
+              taskId,
+              TaskStatus(status: 'SUCCESS', result: {'message': 'Test success'}),
+            );
+          });
+        },
+        tooltip: 'Test Notification',
+        child: const Icon(Icons.add_alert),
+      ),
 
       body: Stack(
         children: [
@@ -209,11 +264,19 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
+                const Spacer(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const NotificationIcon(),
+                  ],
+                ),
                 PopupMenuButton<String>(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(13.0),
                   ),
                   color: cardBackgroundColor,
+
                   elevation: 8,
                   onSelected: (value) {
                     if (value == 'logout') {
@@ -243,9 +306,9 @@ class _HomeState extends State<Home> {
                   ],
 
                   child: const CircleAvatar(
-                    radius: 18,
+                    radius: 14,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: accentColor, size: 20),
+                    child: Icon(Icons.person, color: accentColor, size: 14),
                   ),
                 ),
               ],

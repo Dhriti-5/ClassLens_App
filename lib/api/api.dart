@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:classlens/data_models/subjects.dart';
 import 'package:http/http.dart' as http;
 import 'package:classlens/data_models/departments.dart';
+import 'package:classlens/data_models/task_status.dart';
 
 
 class ApiServices{
@@ -261,12 +263,72 @@ class ApiServices{
       else{
         String message = jsonDecode(response.body)['detail'];
         print(message);
-        throw Exception('Failed to load subjects: $message');
+        return Future.value([]);
       }
     }
     catch(e){
       print(e.toString());
       throw Exception('Failed to connect to the server: $e');
+    }
+  }
+
+  static Future<Map<String,dynamic>> markAttendance({required final File imageFile, required final String departmentName, required final int semester,required final int year, required final String subject}) async {
+    const endpoint = 'http://127.0.0.1:8000/api/markAttendance';
+    final url = Uri.parse(endpoint);
+    try {
+      final request = http.MultipartRequest('POST', url);
+
+      request.fields['departmentName'] = departmentName;
+      request.fields['semester'] = semester.toString();
+      request.fields['year'] = year.toString();
+      request.fields['subject'] = subject;
+
+      request.files.add(
+          await http.MultipartFile.fromPath(
+              'photo',
+              imageFile.path
+          )
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if(response.statusCode==202){
+        final responseData = json.decode(response.body);
+        return {"message":responseData['message'],"task_id":responseData["task_id"]};
+      }
+      else{
+        throw Exception('Failed to mark attendance: ${response.statusCode}');
+      }
+    }
+    catch(e){
+      print(e.toString());
+      return {"message":e.toString()};
+    }
+
+
+  }
+
+  static Future<TaskStatus> checkTaskStatus({required taskID}) async{
+
+    String endpoint = 'http://127.0.0.1:8000/api/attendanceStatus/$taskID/';
+
+    final url =Uri.parse(endpoint);
+
+    try{
+      final response = await http.get(url);
+
+      if(response.statusCode==200 || response.statusCode==202){
+        final jsonBody = jsonDecode(response.body);
+        return TaskStatus.fromJson(jsonBody);
+      }
+      else{
+        throw Exception('Failed to check task status');
+      }
+    }
+    catch(e){
+      print(e.toString());
+      return TaskStatus(status: "error", result: e.toString());
     }
   }
 }

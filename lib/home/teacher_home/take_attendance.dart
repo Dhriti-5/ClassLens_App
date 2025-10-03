@@ -1,11 +1,12 @@
 import 'dart:io';
-
 import 'package:classlens/api/api.dart';
 import 'package:classlens/data_models/departments.dart';
 import 'package:classlens/data_models/subjects.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
+import 'package:classlens/home/teacher_home/processing_screen.dart';
 
 // Using a consistent color palette
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -69,15 +70,13 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
       catch(e){
         setState(() { _isSubjectsLoading = false; });
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error fetching subjects: ${e.toString()}'))
+            SnackBar(content: Text('Error fetching subjects'))
         );
-        print(e.toString());
       }
 
 
     }
   }
-
 
   Future<void> _pickImage(ImageSource source) async {
     Navigator.of(context).pop();
@@ -149,7 +148,7 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
     );
   }
 
-  void _submitAttendance() {
+  Future<void> _submitAttendance() async {
     if (_imageFile == null ||
         _selectedDepartment == null ||
         _selectedYear == null ||
@@ -162,6 +161,40 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
       );
       return;
     }
+
+    else {
+      try {
+        final int updatedYear = int.parse(_selectedYear!.replaceAll(RegExp(r'[^0-9]'), ''));
+        final int updatedSemester = int.parse(_selectedSemester!.replaceAll(RegExp(r'[^0-9]'), ''));
+
+        // 2. Navigate to the new processing screen and wait for a result
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProcessingScreen(
+              imageFile: File(_imageFile!.path),
+              departmentName: _selectedDepartment!,
+              semester: updatedSemester,
+              year: updatedYear,
+              subject: _selectedSubject!,
+            ),
+          ),
+        );
+        if (result != null && result is String && mounted) {
+
+          Navigator.of(context).pop(result);
+
+        }
+      }
+      catch(e){
+        print(e.toString());
+      }
+      finally{
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+
   }
 
   @override
@@ -184,104 +217,107 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: primaryTextColor),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildImagePickerBox(),
-            const SizedBox(height: 32),
-            const FittedBox(
-              alignment: Alignment.centerLeft,
-              fit: BoxFit.scaleDown,
-              child: Text(
-                'Class Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryTextColor,
+      body: Stack(
+        children:[
+          SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildImagePickerBox(),
+              const SizedBox(height: 32),
+              const FittedBox(
+                alignment: Alignment.centerLeft,
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Class Details',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            FutureBuilder<List<Departments>>(
-              future: _departments,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Text('Unable to fetch departments: ${snapshot.error}');
-                }
-                if (snapshot.hasData) {
-                  final List<Departments> departmentsList = snapshot.data!;
-                  final List<String> departmentNames = departmentsList
-                      .map((department) => department.departmentName)
-                      .toList();
-                  return Column(
-                    children: [
-                      _buildDropdown(
-                        icon: Icons.school_outlined,
-                        hint: 'Department',
-                        value: _selectedDepartment,
-                        items: departmentNames,
-
-                        onChanged: (value) {
-                          setState(() => _selectedDepartment = value);
-                          _fetchSubjects();
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdown(
-                        icon: Icons.format_list_numbered,
-                        hint: 'Year',
-                        value: _selectedYear,
-                        items: _years,
-                        onChanged: (value) {
-                          setState(() => _selectedYear = value);
-                          _fetchSubjects();
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdown(
-                        icon: Icons.calendar_today_outlined,
-                        hint: 'Semester',
-                        value: _selectedSemester,
-                        items: _semesters,
-                        onChanged: (value) {
-                          setState(() => _selectedSemester = value);
-                          _fetchSubjects();
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      if (_isSubjectsLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: CircularProgressIndicator(),
-                        )
-                      else
+              const SizedBox(height: 16),
+              FutureBuilder<List<Departments>>(
+                future: _departments,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Text('Unable to fetch departments: ${snapshot.error}');
+                  }
+                  if (snapshot.hasData) {
+                    final List<Departments> departmentsList = snapshot.data!;
+                    final List<String> departmentNames = departmentsList
+                        .map((department) => department.departmentName)
+                        .toList();
+                    return Column(
+                      children: [
                         _buildDropdown(
-                          icon: Icons.subject,
-                          hint: 'Subject',
-                          value: _selectedSubject,
-                          items: _subjects.map((s) => s.name).toList(),
-                          onChanged: _subjects.isEmpty
-                              ? null
-                              : (value) {
-                            setState(() => _selectedSubject = value);
+                          icon: Icons.school_outlined,
+                          hint: 'Department',
+                          value: _selectedDepartment,
+                          items: departmentNames,
+
+                          onChanged: (value) {
+                            setState(() => _selectedDepartment = value);
+                            _fetchSubjects();
                           },
                         ),
-                      const SizedBox(height: 32),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildSubmitButton(),
-          ],
+                        const SizedBox(height: 16),
+                        _buildDropdown(
+                          icon: Icons.format_list_numbered,
+                          hint: 'Year',
+                          value: _selectedYear,
+                          items: _years,
+                          onChanged: (value) {
+                            setState(() => _selectedYear = value);
+                            _fetchSubjects();
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDropdown(
+                          icon: Icons.calendar_today_outlined,
+                          hint: 'Semester',
+                          value: _selectedSemester,
+                          items: _semesters,
+                          onChanged: (value) {
+                            setState(() => _selectedSemester = value);
+                            _fetchSubjects();
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        if (_isSubjectsLoading)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: CircularProgressIndicator(),
+                          )
+                        else
+                          _buildDropdown(
+                            icon: Icons.subject,
+                            hint: 'Subject',
+                            value: _selectedSubject,
+                            items: _subjects.map((s) => s.name).toList(),
+                            onChanged: _subjects.isEmpty
+                                ? null
+                                : (value) {
+                              setState(() => _selectedSubject = value);
+                            },
+                          ),
+                        const SizedBox(height: 32),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildSubmitButton(),
+            ],
+          ),
         ),
-      ),
+      ]),
     );
   }
 
@@ -464,8 +500,7 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             // Padding for safety
             child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                // MODIFIED: Wrapped with FittedBox
+                ? Lottie.asset('assets/animations/loading.json',width: 50,height: 50)
                 : const FittedBox(
                     child: Text(
                       'Submit Attendance',
