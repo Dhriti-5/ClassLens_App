@@ -2,84 +2,175 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classlens/global/providers/task_manager_provider.dart';
 import 'package:classlens/global/providers/task_provider.dart';
-import 'package:intl/intl.dart';
+
+// --- Design Constants for consistent styling ---
+const Color primaryTextColor = Color(0xFF1A2533);
+const Color secondaryTextColor = Color(0xFF6C757D);
+const Color accentColor = Color(0xFF4A90E2);
+const Color successColor = Color(0xFF43A047);
+const Color pendingColor = Color(0xFFFDD835);
+const Color errorColor = Color(0xFFE53935);
 
 class NotificationTaskItem extends ConsumerWidget {
   final UserTask task;
-  const NotificationTaskItem({required this.task, super.key});
+  final bool isRead;
+
+  const NotificationTaskItem({
+    required this.task,
+    required this.isRead,
+    super.key,
+  });
 
   void _showResultImage(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(12),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-
           children: [
-            const Text("Attendance Result", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text("Attendance Result", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 16),
-            Image.network(imageUrl),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                loadingBuilder: (context, child, progress) =>
+                progress == null ? child : const Center(child: CircularProgressIndicator()),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
+  ({Color color, IconData icon}) _getStatusStyle(String status) {
+    switch (status) {
+      case 'SUCCESS':
+        return (color: successColor, icon: Icons.check_circle_outline);
+      case 'PENDING':
+      case 'STARTED':
+        return (color: pendingColor, icon: Icons.hourglass_bottom_rounded);
+      default:
+        return (color: errorColor, icon: Icons.error_outline_rounded);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the individual provider for this specific task to get live updates
     final asyncTaskStatus = ref.watch(taskStatusProvider(task.taskID));
+    final taskManager = ref.read(taskManagerProvider.notifier);
 
     return asyncTaskStatus.when(
-      // While waiting for the first status update
-      loading: () => ListTile(
-        leading: const CircularProgressIndicator(),
-        title: const Text("Attendance Scan", style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(DateFormat.yMMMd().add_jm().format(task.submissionTime)),
+      loading: () => _buildLayout(
+        context: context,
+        icon: Icons.hourglass_empty,
+        iconColor: Colors.grey,
+        title: "Attendance Scan",
+        subtitle: "Initializing...",
+        trailing: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
       ),
-
-      // If the polling fails for any reason
-      error: (err, stack) => ListTile(
-        leading: const Icon(Icons.error_outline, color: Colors.red),
-        title: const Text("Task Failed", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        subtitle: Text(err.toString(), maxLines: 2),
+      error: (err, stack) => _buildLayout(
+        context: context,
+        icon: Icons.error_outline,
+        iconColor: errorColor,
+        title: "Scan Failed",
+        subtitle: err.toString(),
+        trailing: const Icon(Icons.refresh, color: secondaryTextColor),
       ),
-      // When we get data (a TaskStatus object)
       data: (status) {
-
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(taskManagerProvider.notifier).updateTaskStatus(task.taskID, status);
+          taskManager.updateTaskStatus(task.taskID, status);
         });
 
+        final statusStyle = _getStatusStyle(status.status);
         Widget trailingWidget;
-        switch (status.status) {
-          case 'SUCCESS':
-            trailingWidget = TextButton.icon(
-              icon: const Icon(Icons.image_outlined),
-              label: const Text("View"),
-              onPressed: () {
-                if (status.result is Map && status.result.containsKey('image_url')) {
-                  _showResultImage(context, status.result['image_url']);
-                }
-              },
-            );
-            break;
-          default: // PENDING, STARTED, or any other state
-            trailingWidget = const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.0),
-            );
+        if (status.status == 'SUCCESS') {
+          trailingWidget = TextButton(
+            child: const Text("View", style: TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () {
+              if (!isRead) taskManager.markAllRead();
+              if (status.result is Map && status.result.containsKey('image_url')) {
+                _showResultImage(context, status.result['image_url']);
+              }
+            },
+          );
+        } else {
+          trailingWidget = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5));
         }
 
-        return ListTile(
-          leading: const Icon(Icons.camera_alt_outlined, color: Colors.grey),
-          title: const Text("Attendance Scan", style: TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('Status: ${status.status}'),
+        return _buildLayout(
+          context: context,
+          icon: statusStyle.icon,
+          iconColor: statusStyle.color,
+          title: "Attendance Scan",
+          subtitle: 'Status: ${status.status}',
           trailing: trailingWidget,
         );
       },
+    );
+  }
+
+  // This widget now ONLY builds the content, not the background card itself.
+  Widget _buildLayout({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Widget trailing,
+  }) {
+    return InkWell(
+      onTap: () {
+        final taskManager = ProviderScope.containerOf(context).read(taskManagerProvider.notifier);
+        if (!isRead) taskManager.markAllRead();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        child: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: iconColor.withOpacity(0.15),
+                  child: Icon(icon, color: iconColor, size: 26),
+                ),
+                if (!isRead)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: primaryTextColor, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: secondaryTextColor, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            trailing,
+          ],
+        ),
+      ),
     );
   }
 }

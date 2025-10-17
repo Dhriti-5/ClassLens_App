@@ -11,7 +11,7 @@ final taskStatusProvider = StreamProvider.family<TaskStatus,String>((ref,taskID)
   Timer? timer;
 
   int attempts =0;
-  const maxAttempts = 15;
+  const maxAttempts = 12;
   Duration delay = const Duration(seconds: 2);
 
   Future<void> poll() async{

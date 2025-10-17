@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:classlens/global/providers/task_provider.dart';
+import 'package:classlens/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:classlens/login/login_selector.dart';
@@ -25,7 +27,6 @@ const Color successColor = Color(0xFF43A047); // For high attendance
 const Color circleColor1 = Color.fromARGB(255, 178, 218, 255);
 const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
-
 class Home extends ConsumerStatefulWidget {
   final String? teacherName;
   const Home({super.key, this.teacherName});
@@ -38,7 +39,11 @@ class _HomeState extends ConsumerState<Home> {
   int _selectedIndex = 0;
   String? teacherName;
 
-
+  @override
+  void initState(){
+    super.initState();
+    requestNotificationPermissions();
+  }
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -126,6 +131,7 @@ class _HomeState extends ConsumerState<Home> {
 
               // start notification tracking with taskID
               ref.read(taskManagerProvider.notifier).addTask(taskID);
+
             }
       }
     }
@@ -139,44 +145,42 @@ class _HomeState extends ConsumerState<Home> {
     }
   }
 
+  Future<void> requestNotificationPermissions() async{
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation=flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidImplementation?.requestNotificationsPermission();
+  }
+
+  Future<void> showNotification() async{
+    const AndroidNotificationDetails androidNotificationDetails=AndroidNotificationDetails(
+        "Attendance Result",
+        "Attendance Status",
+      importance: Importance.max,
+      priority: Priority.high
+    );
+
+    WindowsNotificationDetails windowsNotificationDetails=WindowsNotificationDetails();
+
+    final NotificationDetails notificationDetails = NotificationDetails(
+        android: androidNotificationDetails,
+        windows: windowsNotificationDetails
+    );
+
+    await flutterLocalNotificationsPlugin.show(0, "Attendance Result", "Your attendance has been evaluated", notificationDetails);
+
+  }
+
   @override
   Widget build(BuildContext context) {
 
     final tasks = ref.watch(taskManagerProvider);
-    for (final task in tasks) {
-      if (!task.isCompleted) {
-        ref.listen<AsyncValue<TaskStatus>>(taskStatusProvider(task.taskID), (previous, next) {
-          final status = next.value;
-          if (status != null) {
-
-            ref.read(taskManagerProvider.notifier).updateTaskStatus(task.taskID, status);
-          }
-        });
-      }
-    }
-
-
+    print("Home screen called ref.watch");
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: primaryBackgroundColor,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // This button simulates a task completing.
-          final taskId = "test-task-${DateTime.now().millisecondsSinceEpoch}";
-
-          // 1. Add a new task
-          ref.read(taskManagerProvider.notifier).addTask(taskId);
-
-          // 2. After 2 seconds, update its status to SUCCESS
-          Future.delayed(const Duration(seconds: 10), () {
-            ref.read(taskManagerProvider.notifier).updateTaskStatus(
-              taskId,
-              TaskStatus(status: 'SUCCESS', result: {'message': 'Test success'}),
-            );
-          });
-        },
-        tooltip: 'Test Notification',
-        child: const Icon(Icons.add_alert),
+          ref.read(taskManagerProvider.notifier).deleteAllNotification();
+        }
       ),
 
       body: Stack(
