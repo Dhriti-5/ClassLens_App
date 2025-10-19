@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:classlens/global/providers/task_provider.dart';
+import 'package:classlens/home/teacher_home/teacher_profile.dart';
 import 'package:classlens/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -9,10 +10,10 @@ import 'package:classlens/login/login_selector.dart';
 import 'package:classlens/global/global.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:classlens/home/teacher_home/take_attendance.dart';
-import '../../data_models/task_status.dart';
 import '../../global/providers/task_manager_provider.dart';
 import '../../page_animations/slide_animation.dart';
 import 'package:classlens/home/teacher_home/widgets/notification_icon.dart';
+import 'package:classlens/home/teacher_home/students_percentage_status.dart';
 
 
 const Color primaryBackgroundColor = Color(0xFFF0F4F8);
@@ -29,7 +30,8 @@ const Color circleColor2 = Color.fromARGB(255, 201, 247, 222);
 
 class Home extends ConsumerStatefulWidget {
   final String? teacherName;
-  const Home({super.key, this.teacherName});
+  final int teacherID;
+  const Home({super.key, this.teacherName, required this.teacherID});
 
   @override
   ConsumerState<Home> createState() => _HomeState();
@@ -37,12 +39,42 @@ class Home extends ConsumerStatefulWidget {
 
 class _HomeState extends ConsumerState<Home> {
   int _selectedIndex = 0;
-  String? teacherName;
+
+
+  late final List<Widget> _pages;
 
   @override
   void initState(){
     super.initState();
     requestNotificationPermissions();
+
+    _pages = <Widget>[
+      SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TakeAttendanceCard(onPressed: _requestCameraPermission,),
+            const SizedBox(height: 24),
+            const RecentActivitySection(),
+            const SizedBox(height: 24),
+            const MyClassesSection(),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+
+      //page 1 student page
+      StudentsPercentageStatus(teacherName: widget.teacherName,teacherID: widget.teacherID,),
+
+      //page 2
+      const Center(
+        child: Text(
+          'Reports',
+          style: TextStyle(fontSize: 24,color: primaryTextColor),
+        ),
+      )
+    ];
   }
   void _onItemTapped(int index) {
     setState(() {
@@ -101,6 +133,7 @@ class _HomeState extends ConsumerState<Home> {
                 SharedPreferences pref = await SharedPreferences.getInstance();
                 pref.setBool("rememberMe", false);
                 pref.remove("teacherName");
+                pref.remove("teacherID");
                 Navigator.of(context).pop();
                 Navigator.push(context, MaterialPageRoute(builder: (context)=>const LoginSelector()));
               },
@@ -171,7 +204,8 @@ class _HomeState extends ConsumerState<Home> {
 
   @override
   Widget build(BuildContext context) {
-
+    print(widget.teacherID);
+    final topPadding = MediaQuery.of(context).padding.top;
     final tasks = ref.watch(taskManagerProvider);
     print("Home screen called ref.watch");
     final screenSize = MediaQuery.of(context).size;
@@ -182,7 +216,6 @@ class _HomeState extends ConsumerState<Home> {
           ref.read(taskManagerProvider.notifier).deleteAllNotification();
         }
       ),
-
       body: Stack(
         children: [
 
@@ -203,92 +236,76 @@ class _HomeState extends ConsumerState<Home> {
             ),
           ),
 
-          CustomScrollView(
-            slivers: [
-              _buildSliverAppBar(screenSize),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    Padding(
-
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TakeAttendanceCard(onPressed: _requestCameraPermission,),
-
-                          const SizedBox(height: 24),
-                          const RecentActivitySection(),
-                          const SizedBox(height: 24),
-                          const MyClassesSection(),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Padding(
+            padding: EdgeInsets.only(top: kToolbarHeight + topPadding),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: _pages,
+            ),
           ),
+
+          _buildPersistentAppBar(),
         ],
       ),
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  SliverAppBar _buildSliverAppBar(Size screenSize) {
-    return SliverAppBar(
-      backgroundColor: Colors.transparent,
-      automaticallyImplyLeading: false,
-      pinned: true,
-      elevation: 0,
-      expandedHeight: screenSize.height * 0.15,
-      flexibleSpace: ClipRect(
+  Widget _buildPersistentAppBar() {
+
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-          child: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            centerTitle: false,
-            title: Row(
+          child: Container(
+
+            padding: EdgeInsets.only(
+              top: topPadding,
+              left: 16.0,
+              right: 16.0,
+            ),
+            height: kToolbarHeight + topPadding,
+            color: Colors.transparent,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 Flexible(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      widget.teacherName??userName,
-                      style: TextStyle(
+                      widget.teacherName ?? userName,
+                      style: const TextStyle(
                         color: primaryTextColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 22,
                       ),
                     ),
                   ),
                 ),
                 const Spacer(),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const NotificationIcon(),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: const NotificationIcon(),
                 ),
                 PopupMenuButton<String>(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(13.0),
                   ),
                   color: cardBackgroundColor,
-
                   elevation: 8,
                   onSelected: (value) {
                     if (value == 'logout') {
                       _showLogoutDialog(context);
                     }
                     if (value == 'profile') {
-                      // TODO: Implement navigation to profile page
-                      print("Profile tapped");
+                      navigatorWithAnimation(context, TeacherProfile());
                     }
                   },
                   itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -308,11 +325,10 @@ class _HomeState extends ConsumerState<Home> {
                       ),
                     ),
                   ],
-
                   child: const CircleAvatar(
-                    radius: 14,
+                    radius: 22,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: accentColor, size: 14),
+                    child: Icon(Icons.person, color: accentColor, size: 22),
                   ),
                 ),
               ],

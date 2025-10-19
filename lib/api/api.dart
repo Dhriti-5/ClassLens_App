@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:classlens/data_models/subjects.dart';
+import 'package:classlens/data_models/teacher_subjects.dart';
 import 'package:http/http.dart' as http;
 import 'package:classlens/data_models/departments.dart';
 import 'package:classlens/data_models/task_status.dart';
+import 'package:classlens/data_models/student_list.dart';
 
 
 class ApiServices{
@@ -214,13 +216,13 @@ class ApiServices{
       final response = await http.post(url,headers: headers,body: body);
       String jsonBody = response.body;
       String teacherName = jsonDecode(jsonBody)['teacher_name'];
+      int teacherID = jsonDecode(jsonBody)['teacher_id'];
       String message = jsonDecode(jsonBody)['message'];
       if(response.statusCode==200){
 
         print("teacher validated successfully");
 
-        print(message);
-        return {'status':true,'teacherName':teacherName,'message':message};
+        return {'status':true,'teacherID':teacherID,'teacherName':teacherName,'message':message};
       }
       else{
         print("teacher validation failed");
@@ -331,4 +333,92 @@ class ApiServices{
       return TaskStatus(status: "error", result: e.toString());
     }
   }
+
+  static Future<List<TeacherSubjects>> getTeacherSubjects({required teacherID}) async{
+    String endpoint = 'http://127.0.0.1:8000/api/getSubjects/';
+    final url = Uri.parse(endpoint);
+
+    const header ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body = jsonEncode({
+      'teacher_id':teacherID
+    });
+
+    try{
+      final response = await http.post(
+          url,
+          headers: header,
+          body: body
+      );
+
+      if(response.statusCode==200){
+
+        final jsonData = jsonDecode(response.body);
+        final subjects = jsonData['subjects'];
+
+
+        if(subjects!=null) {
+          final List<dynamic> jsonData = jsonDecode(response.body)['subjects'];
+          return jsonData.map((json)=>TeacherSubjects.fromJson(json)).toList();
+        }
+        return Future.value(List<TeacherSubjects>.empty());
+
+      }
+      else{
+        print("error");
+        return Future.value(List<TeacherSubjects>.empty());
+      }
+
+    }
+    catch(e){
+      print(e.toString());
+      return Future.value(List<TeacherSubjects>.empty());
+    }
+  }
+
+  static Future<List<StudentList>> getStudentList({required subjectID}) async{
+    String endpoint = 'http://127.0.0.1:8000/api/students/attendance/';
+    final url = Uri.parse(endpoint);
+
+    const header ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body = jsonEncode({
+      'subject_id':subjectID
+    });
+
+    try{
+      final response = await http.post(
+          url,
+          headers: header,
+          body: body
+      );
+
+      if(response.statusCode==200){
+        final jsonBody = jsonDecode(response.body);
+
+        final students = jsonBody['attendance'];
+
+        if(students!=null){
+          final List<dynamic> students = jsonBody['attendance'];
+          return students.map((json)=>StudentList.fromJson(json)).toList();
+        }
+        else{
+          return Future.value(List<StudentList>.empty());
+        }
+      }
+      else{
+        return Future.value(List<StudentList>.empty());
+      }
+    }
+    catch(e){
+      print(e);
+      return Future.value(List<StudentList>.empty());
+    }
+
+  }
+
 }

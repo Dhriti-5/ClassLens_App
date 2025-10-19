@@ -27,9 +27,9 @@ class NotificationIcon extends ConsumerWidget {
           clipBehavior: Clip.none,
           children: [
             const CircleAvatar(
-              radius: 14,
+              radius: 24,
               backgroundColor: Colors.white,
-              child: Icon(Icons.notifications_outlined, color: accentColor, size: 14),
+              child: Icon(Icons.notifications_outlined, color: accentColor, size: 22),
             ),
             if (unreadCount > 0)
               Positioned(
@@ -44,12 +44,12 @@ class NotificationIcon extends ConsumerWidget {
                       BorderSide(color: Colors.white, width: 1.5),
                     ),
                   ),
-                  constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                   child: Text(
                     '$unreadCount',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 7,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,

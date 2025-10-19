@@ -36,6 +36,7 @@ void main() async {
   flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   userName = await getUserName();
+  userID = await getUserID();
 
 
   runApp(
