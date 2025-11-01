@@ -1,7 +1,11 @@
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 late String userName;
 late int userID;
+late Box classSessionBox;
+
+
 
 Future<bool> getRememberMe() async {
   SharedPreferences pref = await SharedPreferences.getInstance();

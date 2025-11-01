@@ -30,7 +30,6 @@ class TeacherProfile extends StatelessWidget {
     this.dateJoined = "October 20, 2025",
   });
 
-
   Widget _buildBlurredAppBar(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 

@@ -1,14 +1,12 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'global/providers/task_manager_provider.dart';
 import 'splash_screen.dart';
 import 'package:classlens/global/global.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:classlens/data_models/notification_hive_model.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import 'package:classlens/data_models/class_session_data.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -18,7 +16,15 @@ void main() async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(NotificationHiveModelAdapter());
+  Hive.registerAdapter(SessionStatsAdapter());
   await Hive.openBox<NotificationHiveModel>('notifications');
+
+  //await Hive.deleteBoxFromDisk("classSessionBox");
+
+  classSessionBox=await Hive.openBox<SessionStats>("classSessionBox");
+
+  print("Total sessions are ${classSessionBox.length}");
+  print("totals keys are ${classSessionBox.keys}");
 
 
   const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings("app_icon.png");

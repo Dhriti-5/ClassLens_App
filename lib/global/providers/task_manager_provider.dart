@@ -1,9 +1,11 @@
+import 'package:classlens/global/global.dart';
 import 'package:classlens/global/providers/task_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:classlens/data_models/notification_hive_model.dart';
 import 'package:classlens/data_models/task_status.dart';
+import 'package:classlens/data_models/class_session_data.dart';
+
 
 class UserTask {
   late final String taskID;
@@ -18,66 +20,142 @@ class UserTask {
     this.isRead = true,
   });
 
-  bool get isCompleted =>
-      currentStatus?.status == 'SUCCESS' || currentStatus?.status == 'FAILURE';
+  bool get isCompleted {
+    final current = currentStatus?.status.trim();
+    return current == 'SUCCESS' || current == 'FAILURE';
+  }
 }
 
-class TaskManagerNotifier extends StateNotifier<List<UserTask>> {
-  final Ref _ref;
+
+class TaskManagerNotifier extends Notifier<List<UserTask>> {
+
   final _box = Hive.box<NotificationHiveModel>('notifications');
 
-
-  final Set<String> _activeListeners = {};
-
-  TaskManagerNotifier(this._ref) : super([]) {
+  @override
+  List<UserTask> build() {
     final tasksFromHive =
     _box.values.map((hiveTask) => hiveTask.toUserTask()).toList();
-    state = tasksFromHive;
-    print("Loaded ${state.length} tasks from Hive on startup.");
+    print("CONSTRUCTOR: Loaded ${tasksFromHive.length} tasks from Hive.");
 
-    for (final task in state) {
+
+    for (final task in tasksFromHive) {
       if (!task.isCompleted) {
+        print("CONSTRUCTOR LOOP: Task ${task.taskID} is NOT complete. Calling _listenToSingleTask.");
         _listenToSingleTask(task);
+      } else {
+        print("CONSTRUCTOR LOOP: Task ${task.taskID} IS complete. Skipping listener.");
       }
     }
+
+    return tasksFromHive;
   }
+
+
+  final Map<String, ProviderSubscription<AsyncValue<TaskStatus>>> _activeSubscriptions = {};
+
 
   void _listenToSingleTask(UserTask task) {
-    // Prevent duplicate listeners
-    if (_activeListeners.contains(task.taskID)) {
+    if (_activeSubscriptions.containsKey(task.taskID)) {
+      print("Listener for ${task.taskID} already exists. Skipping.");
       return;
     }
-    _activeListeners.add(task.taskID);
+    print("Starting listener (manual) for task ${task.taskID}");
 
-    _ref.listen<AsyncValue<TaskStatus>>(
+
+    final subscription = ref.listen<AsyncValue<TaskStatus>>(
       taskStatusProvider(task.taskID),
           (previous, next) {
-        if (next.isLoading || next.hasError || !next.hasValue) return;
+        next.when(
+          data: (TaskStatus status) {
+            print("_listen CALLBACK (${task.taskID}): State is DATA. Status='${status.status}'");
 
-        final previousStatus = previous?.value?.status;
-        final newStatus = next.value!.status;
 
+            final existingTask = state.firstWhere(
+                  (t) => t.taskID == task.taskID,
+              orElse: () => task,
+            );
+            final previousStatus = existingTask.currentStatus?.status.trim();
+            final newStatus = status.status.trim();
 
-        if (previousStatus != newStatus) {
-          print("Status for ${task
-              .taskID} changed from '$previousStatus' to '$newStatus'. Updating state.");
-          updateTaskStatus(task.taskID, next.value!);
-        }
+            if (previousStatus != newStatus) {
+              print("_listen CALLBACK (${task.taskID}): Status changed. Calling updateTaskStatus.");
+              updateTaskStatus(task.taskID, status);
+            }
+
+            if (newStatus == 'SUCCESS' || newStatus == 'FAILURE') {
+              print("_listen CALLBACK (${task.taskID}): Final state detected. Closing listener.");
+              _cancelSubscription(task.taskID); // Close the listener
+            }
+          },
+          error: (err, stack) {
+            print("_listen CALLBACK (${task.taskID}): State is ERROR: $err. Closing listener.");
+            _cancelSubscription(task.taskID); // Close the listener
+          },
+          loading: () {
+            print("_listen CALLBACK (${task.taskID}): State is LOADING.");
+          },
+        );
       },
     );
+
+    _activeSubscriptions[task.taskID] = subscription;
   }
+
+  void _cancelSubscription(String taskID) {
+    if (_activeSubscriptions.containsKey(taskID)) {
+      _activeSubscriptions[taskID]?.close();
+      _activeSubscriptions.remove(taskID);
+      print("Subscription for task $taskID CANCELLED.");
+    }
+  }
+
+  void setupDispose() {
+    ref.onDispose(() {
+      print("Disposing TaskManagerNotifier. Cancelling ${_activeSubscriptions.length} subscriptions.");
+      for (final sub in _activeSubscriptions.values) {
+        sub.close();
+      }
+      _activeSubscriptions.clear();
+    });
+  }
+
 
   void addTask(String taskID) {
     if (state.any((task) => task.taskID == taskID)) return;
-
     final newTask = UserTask(taskID: taskID, submissionTime: DateTime.now());
-    state = [...state, newTask];
-    _saveStateToHive();
 
+
+    state = [...state, newTask];
+
+    _saveStateToHive();
     _listenToSingleTask(newTask);
   }
 
   void updateTaskStatus(String taskID, TaskStatus status) {
+    final cleanStatus = status.status.trim();
+
+    if (cleanStatus == 'SUCCESS') {
+      print("updateTaskStatus ($taskID): Status is SUCCESS. Result: ${status.result}");
+      dynamic classSessionID = status.result["class_session_id"];
+      dynamic presentCount = status.result["present_count"];
+      dynamic absentCount = status.result["absent_count"];
+      dynamic subject = status.result["subject"];
+      if (classSessionID is int && presentCount is int && absentCount is int) {
+        if (!classSessionBox.containsKey(classSessionID)) {
+          final newStats = SessionStats()
+            ..subject=subject
+            ..classSessionId=classSessionID
+            ..presentCount=presentCount
+            ..absentCount=absentCount
+            ..date=DateTime.now();
+          classSessionBox.put(classSessionID, newStats);
+          print("updateTaskStatus ($taskID): Saved new ID $classSessionID to Hive.");
+        } else {
+          print("updateTaskStatus ($taskID): ID $classSessionID already exists in Hive list.");
+        }
+      }
+    }
+
     state = [
       for (final task in state)
         if (task.taskID == taskID)
@@ -85,38 +163,12 @@ class TaskManagerNotifier extends StateNotifier<List<UserTask>> {
             taskID: task.taskID,
             submissionTime: task.submissionTime,
             currentStatus: status,
-            isRead: (status.status == 'SUCCESS' || status.status == 'FAILURE')
+            isRead: (cleanStatus == 'SUCCESS' || cleanStatus == 'FAILURE')
                 ? false
                 : task.isRead,
           )
         else
           task
-    ];
-  }
-
-  void addCompletedTask(UserTask completedTask) {
-    final currentState = [...state];
-    final index = currentState.indexWhere((task) =>
-    task.taskID == completedTask.taskID);
-
-    if (index != -1) {
-      currentState[index] = completedTask;
-    } else {
-      currentState.add(completedTask);
-    }
-    state = currentState;
-    _saveStateToHive();
-  }
-
-  void markAllRead() {
-    state = [
-      for(final task in state)
-        UserTask(
-          taskID: task.taskID,
-          submissionTime: task.submissionTime,
-          currentStatus: task.currentStatus,
-          isRead: true,
-        )
     ];
     _saveStateToHive();
   }
@@ -133,24 +185,39 @@ class TaskManagerNotifier extends StateNotifier<List<UserTask>> {
     }
 
     for (var obsoleteKey in existingKeys) {
-      print(obsoleteKey+"deleted");
+      print("${obsoleteKey}deleted");
       _box.delete(obsoleteKey);
     }
+  }
+
+
+  void markAllRead() {
+    state = [
+      for(final task in state)
+        UserTask(
+          taskID: task.taskID,
+          submissionTime: task.submissionTime,
+          currentStatus: task.currentStatus,
+          isRead: true,
+        )
+    ];
+    _saveStateToHive();
   }
 
   void deleteAllNotification(){
     state=[];
     _box.clear();
-
     print("cleared notification");
   }
+
 }
 
 
 final taskManagerProvider =
-StateNotifierProvider<TaskManagerNotifier, List<UserTask>>((ref) {
-  return TaskManagerNotifier(ref);
+NotifierProvider<TaskManagerNotifier, List<UserTask>>(() {
+  return TaskManagerNotifier();
 });
+
 
 final unreadTaskCountProvider = Provider<int>((ref) {
   final tasks = ref.watch(taskManagerProvider);

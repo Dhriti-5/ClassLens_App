@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:classlens/global/providers/task_provider.dart';
+import 'package:classlens/home/teacher_home/attendance_result.dart';
 import 'package:classlens/home/teacher_home/teacher_profile.dart';
 import 'package:classlens/main.dart';
 import 'package:flutter/material.dart';
@@ -68,12 +68,7 @@ class _HomeState extends ConsumerState<Home> {
       StudentsPercentageStatus(teacherName: widget.teacherName,teacherID: widget.teacherID,),
 
       //page 2
-      const Center(
-        child: Text(
-          'Reports',
-          style: TextStyle(fontSize: 24,color: primaryTextColor),
-        ),
-      )
+      AttendanceResult(),
     ];
   }
   void _onItemTapped(int index) {
@@ -351,8 +346,8 @@ class _HomeState extends ConsumerState<Home> {
           label: 'Students',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart),
-          label: 'Reports',
+          icon: Icon(Icons.fact_check_outlined),
+          label: 'Attendance',
         ),
       ],
       currentIndex: _selectedIndex,

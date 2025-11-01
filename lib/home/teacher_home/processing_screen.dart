@@ -14,6 +14,7 @@ class ProcessingScreen extends StatefulWidget {
   final int semester;
   final int year;
   final String subject;
+  final int subjectID;
 
   const ProcessingScreen({
     super.key,
@@ -22,6 +23,7 @@ class ProcessingScreen extends StatefulWidget {
     required this.semester,
     required this.year,
     required this.subject,
+    required this.subjectID
   });
 
   @override
@@ -43,6 +45,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         semester: widget.semester,
         year: widget.year,
         subject: widget.subject,
+        subjectID: widget.subjectID
       );
       
       if (mounted) {

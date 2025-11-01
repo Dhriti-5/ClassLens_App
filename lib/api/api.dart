@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:classlens/data_models/absentees_student.dart';
 import 'package:classlens/data_models/subjects.dart';
 import 'package:classlens/data_models/teacher_subjects.dart';
 import 'package:http/http.dart' as http;
 import 'package:classlens/data_models/departments.dart';
 import 'package:classlens/data_models/task_status.dart';
 import 'package:classlens/data_models/student_list.dart';
+
+import '../global/global.dart';
 
 
 class ApiServices{
@@ -274,7 +277,7 @@ class ApiServices{
     }
   }
 
-  static Future<Map<String,dynamic>> markAttendance({required final File imageFile, required final String departmentName, required final int semester,required final int year, required final String subject}) async {
+  static Future<Map<String,dynamic>> markAttendance({required final File imageFile, required final String departmentName, required final int semester,required final int year, required final String subject,required final int subjectID}) async {
     const endpoint = 'http://127.0.0.1:8000/api/markAttendance';
     final url = Uri.parse(endpoint);
     try {
@@ -284,6 +287,10 @@ class ApiServices{
       request.fields['semester'] = semester.toString();
       request.fields['year'] = year.toString();
       request.fields['subject'] = subject;
+      request.fields["teacherID"]=userID.toString();
+      request.fields["subjectID"]=subjectID.toString();
+      print(subjectID);
+      print(subject);
 
       request.files.add(
           await http.MultipartFile.fromPath(
@@ -292,8 +299,11 @@ class ApiServices{
           )
       );
 
+      print("sent the request");
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+
+      print(response);
 
       if(response.statusCode==202){
         final responseData = json.decode(response.body);
@@ -421,4 +431,78 @@ class ApiServices{
 
   }
 
+  static Future<List<AbsenteesStudents>> getAbsentStudents({required sessionID}) async{
+    String endpoint = "http://127.0.0.1:8000/api/getAbsenteesList/";
+    final url = Uri.parse(endpoint);
+
+    const header ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body = jsonEncode({
+      'class_session_id':sessionID
+    });
+    try{
+      final response = await http.post(
+          url,
+          headers: header,
+          body: body
+      );
+
+      if(response.statusCode==200){
+        final jsonBody = jsonDecode(response.body);
+
+        final students = jsonBody["students"];
+        if(students!=null){
+          final List<dynamic> students = jsonBody["students"];
+          print(response.body);
+          return students.map((json)=>AbsenteesStudents.fromJson(json)).toList();
+        }
+        else{
+          return Future.value(List<AbsenteesStudents>.empty());
+        }
+      }
+      else{
+        print(response.body);
+        return Future.value(List<AbsenteesStudents>.empty());
+      }
+    }
+    catch(e){
+      print(e.toString());
+      return Future.value(List<AbsenteesStudents>.empty());
+    }
+  }
+
+  static Future<bool> changeAttendance({required sessionID,required List<int> students})async{
+    const endpoint = "http://127.0.0.1:8000/api/changeAttendance/";
+    final url = Uri.parse(endpoint);
+
+    const header ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
+
+    final body = jsonEncode({
+      'class_session_id':sessionID,
+      'student_list':students
+    });
+    try{
+      final response = await http.post(
+        url,
+        headers: header,
+        body:body,
+      );
+
+      if(response.statusCode==200){
+        return Future.value(true);
+      }
+      else{
+        return Future.value(false);
+      }
+
+    }
+    catch(e){
+      print(e.toString());
+      return Future.value(false);
+    }
+  }
 }

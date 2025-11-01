@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classlens/global/providers/task_manager_provider.dart';
-import 'package:classlens/global/providers/task_provider.dart';
 import 'package:classlens/home/teacher_home/widgets/notification_task_item.dart';
 
 // --- Design Constants ---
@@ -25,10 +24,10 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: primaryBackgroundColor,
-      // --- A standard, solid AppBar ---
+
       appBar: AppBar(
         backgroundColor: primaryBackgroundColor,
-        elevation: 1, // Adds a subtle shadow line
+        elevation: 1,
         leading: const BackButton(color: primaryTextColor),
         titleSpacing: 0,
         title: const Text(
@@ -95,7 +94,7 @@ class NotificationsScreen extends ConsumerWidget {
                     ],
                   ),
                   child: NotificationTaskItem(
-                    task: UserTask(taskID: task.taskID, submissionTime: task.submissionTime),
+                    task: task,
                     isRead: task.isRead,
                   ),
                 ),

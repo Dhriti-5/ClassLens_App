@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classlens/global/providers/task_manager_provider.dart';
-import 'package:classlens/global/providers/task_provider.dart';
 
-// --- Design Constants for consistent styling ---
 const Color primaryTextColor = Color(0xFF1A2533);
 const Color secondaryTextColor = Color(0xFF6C757D);
 const Color accentColor = Color(0xFF4A90E2);
@@ -46,74 +44,63 @@ class NotificationTaskItem extends ConsumerWidget {
     );
   }
 
-  ({Color color, IconData icon}) _getStatusStyle(String status) {
+  ({Color color, IconData icon}) _getStatusStyle(String? status) {
     switch (status) {
       case 'SUCCESS':
         return (color: successColor, icon: Icons.check_circle_outline);
       case 'PENDING':
       case 'STARTED':
         return (color: pendingColor, icon: Icons.hourglass_bottom_rounded);
-      default:
+      case 'FAILURE':
         return (color: errorColor, icon: Icons.error_outline_rounded);
+      default: // Handle null or unknown status
+        return (color: Colors.grey, icon: Icons.hourglass_empty);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncTaskStatus = ref.watch(taskStatusProvider(task.taskID));
+
     final taskManager = ref.read(taskManagerProvider.notifier);
+    final status = task.currentStatus;
 
-    return asyncTaskStatus.when(
-      loading: () => _buildLayout(
-        context: context,
-        icon: Icons.hourglass_empty,
-        iconColor: Colors.grey,
-        title: "Attendance Scan",
-        subtitle: "Initializing...",
-        trailing: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-      ),
-      error: (err, stack) => _buildLayout(
-        context: context,
-        icon: Icons.error_outline,
-        iconColor: errorColor,
-        title: "Scan Failed",
-        subtitle: err.toString(),
-        trailing: const Icon(Icons.refresh, color: secondaryTextColor),
-      ),
-      data: (status) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          taskManager.updateTaskStatus(task.taskID, status);
-        });
+    final statusStyle = _getStatusStyle(status?.status);
+    final String subtitle;
+    Widget trailingWidget;
 
-        final statusStyle = _getStatusStyle(status.status);
-        Widget trailingWidget;
-        if (status.status == 'SUCCESS') {
-          trailingWidget = TextButton(
-            child: const Text("View", style: TextStyle(fontWeight: FontWeight.bold)),
-            onPressed: () {
-              if (!isRead) taskManager.markAllRead();
-              if (status.result is Map && status.result.containsKey('image_url')) {
-                _showResultImage(context, status.result['image_url']);
-              }
-            },
-          );
-        } else {
-          trailingWidget = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5));
-        }
+    if (status == null) {
+      subtitle = "Initializing...";
+      trailingWidget = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5));
+    } else if (status.status.trim() == 'SUCCESS') {
+      subtitle = 'Status: ${status.status}';
+      trailingWidget = TextButton(
+        child: const Text("View", style: TextStyle(fontWeight: FontWeight.bold)),
+        onPressed: () {
+          if (!isRead) taskManager.markAllRead();
+          if (status.result is Map && status.result.containsKey('image_url')) {
+            _showResultImage(context, status.result['image_url']);
+          }
+        },
+      );
+    } else if (status.status.trim() == 'FAILURE') {
+      subtitle = 'Status: Failed';
+      trailingWidget = const Icon(Icons.error_outline, color: errorColor);
+    } else {
+      subtitle = 'Status: ${status.status}';
+      trailingWidget = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5));
+    }
 
-        return _buildLayout(
-          context: context,
-          icon: statusStyle.icon,
-          iconColor: statusStyle.color,
-          title: "Attendance Scan",
-          subtitle: 'Status: ${status.status}',
-          trailing: trailingWidget,
-        );
-      },
+
+    return _buildLayout(
+      context: context,
+      icon: statusStyle.icon,
+      iconColor: statusStyle.color,
+      title: "Attendance Scan",
+      subtitle: subtitle,
+      trailing: trailingWidget,
     );
   }
 
-  // This widget now ONLY builds the content, not the background card itself.
   Widget _buildLayout({
     required BuildContext context,
     required IconData icon,
@@ -130,6 +117,7 @@ class NotificationTaskItem extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         child: Row(
+
           children: [
             Stack(
               clipBehavior: Clip.none,

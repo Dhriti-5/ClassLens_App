@@ -29,6 +29,7 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
   XFile? _imageFile;
   String? _selectedDepartment;
   String? _selectedSubject;
+  int? _selectedSubjectID;
   String? _selectedYear;
   String? _selectedSemester;
   bool _isLoading = false;
@@ -152,7 +153,8 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
     if (_imageFile == null ||
         _selectedDepartment == null ||
         _selectedYear == null ||
-        _selectedSemester == null) {
+        _selectedSemester == null||
+        _selectedSubjectID==null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please complete all fields to proceed.'),
@@ -176,6 +178,7 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
               semester: updatedSemester,
               year: updatedYear,
               subject: _selectedSubject!,
+              subjectID:_selectedSubjectID!,
             ),
           ),
         );
@@ -302,6 +305,19 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
                             onChanged: _subjects.isEmpty
                                 ? null
                                 : (value) {
+                              if(value==null){
+                                setState(() {
+                                  _selectedSubjectID=null;
+                                  _selectedSubject=null;
+                                });
+
+                              }else{
+                                final selectedSubject = _subjects.firstWhere((s)=>s.name==value);
+                                setState(() {
+                                  _selectedSubject=selectedSubject.name;
+                                  _selectedSubjectID=selectedSubject.id;
+                                });
+                              }
                               setState(() => _selectedSubject = value);
                             },
                           ),
