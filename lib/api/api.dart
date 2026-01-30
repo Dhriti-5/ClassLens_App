@@ -244,14 +244,7 @@ class ApiServices {
     }
   }
 
-  static Future<Map<String, dynamic>> markAttendance({
-    required final File imageFile,
-    required final String departmentName,
-    required final int semester,
-    required final int year,
-    required final String subject,
-    required final int subjectID,
-  }) async {
+  static Future<Map<String,dynamic>> markAttendance({required final List<File> imageFiles, required final String departmentName, required final int semester,required final int year, required final String subject,required final int subjectID}) async {
     String endpoint = '$_baseUrl/markAttendance';
     final url = Uri.parse(endpoint);
     try {
@@ -263,14 +256,19 @@ class ApiServices {
       request.fields['semester'] = semester.toString();
       request.fields['year'] = year.toString();
       request.fields['subject'] = subject;
-      request.fields["teacherID"] = userID.toString();
-      request.fields["subjectID"] = subjectID.toString();
+      request.fields["teacherID"]=userID.toString();
+      request.fields["subjectID"]=subjectID.toString();
       print(subjectID);
       print(subject);
 
-      request.files.add(
-        await http.MultipartFile.fromPath('photo', imageFile.path),
-      );
+      for(var image in imageFiles) {
+        request.files.add(
+            await http.MultipartFile.fromPath(
+                'photo',
+                image.path
+            )
+        );
+      }
 
       print("sent the request");
       final streamedResponse = await request.send();
@@ -278,19 +276,20 @@ class ApiServices {
 
       print(response);
 
-      if (response.statusCode == 202) {
+      if(response.statusCode==202){
         final responseData = json.decode(response.body);
-        return {
-          "message": responseData['message'],
-          "task_id": responseData["task_id"],
-        };
-      } else {
+        return {"message":responseData['message'],"task_id":responseData["task_id"]};
+      }
+      else{
         throw Exception('Failed to mark attendance: ${response.statusCode}');
       }
-    } catch (e) {
-      print(e.toString());
-      return {"message": e.toString()};
     }
+    catch(e){
+      print(e.toString());
+      return {"message":e.toString()};
+    }
+
+
   }
 
   static Future<TaskStatus> checkTaskStatus({required taskID}) async {
@@ -378,36 +377,44 @@ class ApiServices {
     }
   }
 
-  static Future<List<AbsenteesStudents>> getAbsentStudents({
-    required sessionID,
-  }) async {
-    String endpoint = "$_baseUrl/getAbsenteesList/";
+  static Future<List<PresentAbsenteesStudents>> getPresentAbsentStudents({required int sessionID,required bool isPresent}) async{
+    String endpoint = "$_baseUrl/getPresentAbsentList/";
     final url = Uri.parse(endpoint);
 
-    const header = {'Content-Type': 'application/json; charset=UTF-8'};
+    const header ={
+      'Content-Type': 'application/json; charset=UTF-8'
+    };
 
-    final body = jsonEncode({'class_session_id': sessionID});
-    try {
-      final response = await http.post(url, headers: header, body: body);
+    final body = jsonEncode({
+      'class_session_id':sessionID,
+      'isPresent':isPresent
+    });
+    try{
+      final response = await http.post(
+          url,
+          headers: header,
+          body: body
+      );
 
-      if (response.statusCode == 200) {
+      if(response.statusCode==200){
         final jsonBody = jsonDecode(response.body);
 
         final students = jsonBody["students"];
-        if (students != null) {
+        if(students!=null){
           final List<dynamic> students = jsonBody["students"];
           print(response.body);
-          return students
-              .map((json) => AbsenteesStudents.fromJson(json))
-              .toList();
-        } else {
-          return Future.value(List<AbsenteesStudents>.empty());
+          return students.map((json)=>PresentAbsenteesStudents.fromJson(json)).toList();
         }
-      } else {
+        else{
+          return Future.value(List<PresentAbsenteesStudents>.empty());
+        }
+      }
+      else{
         print(response.body);
         return Future.value(List<PresentAbsenteesStudents>.empty());
       }
-    } catch (e) {
+    }
+    catch(e){
       print(e.toString());
       return Future.value(List<PresentAbsenteesStudents>.empty());
     }

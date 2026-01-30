@@ -91,7 +91,10 @@ void main() async {
   runApp(
     ProviderScope(
 
-      child: MyApp(),
+      child: DevicePreview(
+        enabled: true,
+        builder: (context) => MyApp(),
+      ),
     ),
   );
 }
