@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:classlens/data_models/absentees_student.dart';
 import 'package:classlens/data_models/subjects.dart';
 import 'package:classlens/data_models/teacher_profile.dart';
 import 'package:classlens/data_models/teacher_subjects.dart';
@@ -10,6 +9,7 @@ import 'package:classlens/data_models/departments.dart';
 import 'package:classlens/data_models/task_status.dart';
 import 'package:classlens/data_models/student_list.dart';
 import 'package:classlens/global/config.dart';
+import '../data_models/present_absentees_student.dart';
 import '../global/global.dart';
 
 class ApiServices {
@@ -257,6 +257,8 @@ class ApiServices {
     try {
       final request = http.MultipartRequest('POST', url);
 
+      print(userID);
+
       request.fields['departmentName'] = departmentName;
       request.fields['semester'] = semester.toString();
       request.fields['year'] = year.toString();
@@ -403,11 +405,11 @@ class ApiServices {
         }
       } else {
         print(response.body);
-        return Future.value(List<AbsenteesStudents>.empty());
+        return Future.value(List<PresentAbsenteesStudents>.empty());
       }
     } catch (e) {
       print(e.toString());
-      return Future.value(List<AbsenteesStudents>.empty());
+      return Future.value(List<PresentAbsenteesStudents>.empty());
     }
   }
 
