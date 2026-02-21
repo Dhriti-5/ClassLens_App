@@ -81,23 +81,31 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
     final picker = ImagePicker();
-    
+
     if (source == ImageSource.gallery) {
       final List<XFile> pickedFiles = await picker.pickMultiImage(
         imageQuality: 85,
       );
-      
+
+      if (!mounted) return;
+
       if (pickedFiles.isNotEmpty) {
         setState(() {
           _imageFiles.addAll(pickedFiles);
           if (_imageFiles.length > 3) {
             _imageFiles = _imageFiles.sublist(0, 3);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Maximum 3 images allowed')),
-            );
           }
         });
+        if (_imageFiles.length > 3) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Maximum 3 images allowed')),
+          );
+        }
       }
     } else {
       final XFile? pickedFile = await picker.pickImage(
@@ -105,16 +113,16 @@ class _AttendanceUploadScreenState extends State<AttendanceUploadScreen> {
         imageQuality: 85,
       );
 
+      if (!mounted) return;
+
       if (pickedFile != null) {
-        setState(() {
-          if (_imageFiles.length < 3) {
-            _imageFiles.add(pickedFile);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Maximum 3 images allowed')),
-            );
-          }
-        });
+        if (_imageFiles.length < 3) {
+          setState(() => _imageFiles.add(pickedFile));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Maximum 3 images allowed')),
+          );
+        }
       }
     }
   }

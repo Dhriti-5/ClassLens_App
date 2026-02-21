@@ -26,13 +26,23 @@ class _StudentFaceUpdateScreenState extends State<StudentFaceUpdateScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
     try {
       final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
+
+      if (!mounted) return;
+
       if (pickedFile != null) {
         setState(() => _imageFile = pickedFile);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
     }
   }
 
@@ -53,8 +63,17 @@ class _StudentFaceUpdateScreenState extends State<StudentFaceUpdateScreen> {
     final faceDetector = FaceDetector(options: options);
 
     try {
-      final inputImage = InputImage.fromFilePath(imageFile.path);
+      final bytes = await imageFile.readAsBytes();
       final imageSize = await _getImageSize(imageFile);
+      final inputImage = InputImage.fromBytes(
+        bytes: bytes,
+        metadata: InputImageMetadata(
+          size: imageSize,
+          rotation: InputImageRotation.rotation0deg,
+          format: InputImageFormat.bgra8888,
+          bytesPerRow: imageSize.width.toInt() * 4,
+        ),
+      );
       final List<Face> faces = await faceDetector.processImage(inputImage);
 
       if (faces.isEmpty) {

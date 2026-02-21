@@ -52,21 +52,30 @@ class _StudentPhotoUploaderState extends State<StudentPhotoUploader> {
   bool _isRegistering = false;
 
   Future<void> _pickImage(ImageSource source) async {
-    Navigator.of(context).pop(); // Close the bottom sheet
+    // Close the bottom sheet first, then wait for the dismiss animation to complete before launching the camera.
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
     try {
       final pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 80, // Compress image to reduce file size
       );
+
+      if (!mounted) return;
+
       if (pickedFile != null) {
         setState(() {
           _imageFile = pickedFile;
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
     }
   }
 
@@ -98,10 +107,20 @@ class _StudentPhotoUploaderState extends State<StudentPhotoUploader> {
 
     try {
       print("Starting image validation...");
-      final inputImage = InputImage.fromFilePath(imageFile.path);
       
-      print("Getting image size...");
-      final imageSize = await _getImageSize(imageFile); 
+      final bytes = await imageFile.readAsBytes();
+      final imageSize = await _getImageSize(imageFile);
+      final inputImage = InputImage.fromBytes(
+        bytes: bytes,
+        metadata: InputImageMetadata(
+          size: imageSize,
+          rotation: InputImageRotation.rotation0deg,
+          format: InputImageFormat.bgra8888,
+          bytesPerRow: imageSize.width.toInt() * 4,
+        ),
+      );
+      
+      // imageSize already fetched above alongside bytes reading
 
       print("Processing image with FaceDetector...");
       // Add a timeout to prevent infinite hanging
