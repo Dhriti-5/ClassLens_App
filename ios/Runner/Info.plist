@@ -41,6 +41,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>ClassLens needs camera access to capture attendance photos and register your face ID.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ClassLens needs photo library access to upload attendance images and your face ID.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
