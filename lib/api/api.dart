@@ -250,7 +250,6 @@ class ApiServices {
     try {
       final request = http.MultipartRequest('POST', url);
 
-      print(userID);
 
       request.fields['departmentName'] = departmentName;
       request.fields['semester'] = semester.toString();
@@ -270,26 +269,31 @@ class ApiServices {
         );
       }
 
-      print("sent the request");
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      print(response);
-
-      if(response.statusCode==202){
+      if (response.statusCode == 200 || response.statusCode==202) {
         final responseData = json.decode(response.body);
-        return {"message":responseData['message'],"task_id":responseData["task_id"]};
+        return {
+          "message": responseData['message'] ?? "Task initiated",
+          "task_id": responseData["task_id"]
+        };
+      } else {
+        String errorMessage = 'Failed to mark attendance: ${response.statusCode}';
+        try {
+          final responseData = json.decode(response.body);
+          if (responseData != null && responseData['error'] != null) {
+            errorMessage = responseData['error'];
+          } 
+        } catch (_) {
+          
+        }
+        return {"message": errorMessage, "task_id": null};
       }
-      else{
-        throw Exception('Failed to mark attendance: ${response.statusCode}');
-      }
+    } catch (e) {
+      print("Exception in markAttendance: ${e.toString()}");
+      return {"message": e.toString(), "task_id": null};
     }
-    catch(e){
-      print(e.toString());
-      return {"message":e.toString()};
-    }
-
-
   }
 
   static Future<TaskStatus> checkTaskStatus({required taskID}) async {

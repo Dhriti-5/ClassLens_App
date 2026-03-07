@@ -49,14 +49,18 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
         subjectID: widget.subjectID,
 
       );
-      
+
       if (mounted) {
+        final taskID = returnedUrl['task_id']?.toString();
+        final message = returnedUrl['message']?.toString() ?? 'Upload failed';
 
-        String taskID = returnedUrl['task_id'];
-        String message = returnedUrl['message'];
-        Navigator.of(context).pop(taskID);
+        if (taskID != null) {
+          Navigator.of(context).pop(taskID);
+        } else {
+          
+          Navigator.of(context).pop('Error: $message');
+        }
       }
-
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop('Error: ${e.toString()}');

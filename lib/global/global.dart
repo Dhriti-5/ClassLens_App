@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:classlens/api/api.dart';
 
 late String userName;
-late int userID;
+int? userID;
 late Box classSessionBox;
 
 // Keys for SharedPreferences
@@ -44,9 +44,9 @@ Future<String> getUserName() async {
   return pref.getString(_keyTeacherName) ?? "Teacher";
 }
 
-Future<int> getUserID() async {
+Future<int?> getUserID() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
-  return pref.getInt(_keyTeacherID) ?? 0;
+  return pref.getInt(_keyTeacherID);
 }
 
 Future<void> saveTeacherSession({
