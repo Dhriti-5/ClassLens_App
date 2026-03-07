@@ -4,7 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:classlens/api/api.dart';
 
 late String userName;
-int? userID;
+late int userID;
 late Box classSessionBox;
 
 // Keys for SharedPreferences

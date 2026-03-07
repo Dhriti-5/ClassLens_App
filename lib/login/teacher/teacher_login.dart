@@ -301,9 +301,16 @@ class _LoginPageState extends State<Login> {
           _teacherPasswordController.clear();
           final SharedPreferences pref = await SharedPreferences.getInstance();
           pref.setBool("rememberMe", isChecked);
-          await pref.setString("teacherName", result['teacherName']);
-          await pref.setInt("teacherID", result['teacherID']);
+          pref.setString("teacherName", result['teacherName']);
+          pref.setInt("teacherID", result['teacherID']);
          // navigatorWithAnimation(context, Home(teacherName: result['teacherName'] as String?,teacherID: result['teacherID'] as int),);
+
+          saveTeacherSession(
+              rememberMe: isChecked,
+              teacherName: result['teacherName'],
+              teacherID: result['teacherID']
+          );
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(

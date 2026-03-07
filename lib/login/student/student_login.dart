@@ -49,7 +49,9 @@ class _StudentLoginPageState extends State<StudentLogin> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery
+        .of(context)
+        .size;
 
     return Scaffold(
       backgroundColor: primaryBackgroundColor,
@@ -133,13 +135,13 @@ class _StudentLoginPageState extends State<StudentLogin> {
               keyboardType: TextInputType.number,
               maxLength: 10,
               validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Please enter your PRN";
-              }
-              if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                return "Please enter a valid 10-digit PRN";
-              }
-              return null;
+                if (value == null || value.isEmpty) {
+                  return "Please enter your PRN";
+                }
+                if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                  return "Please enter a valid 10-digit PRN";
+                }
+                return null;
               },
             ),
 
@@ -148,7 +150,8 @@ class _StudentLoginPageState extends State<StudentLogin> {
             // --- Password Text Field ---
             TextFormField(
               controller: _studentPasswordController,
-              decoration: _inputDecoration('Password', Icons.lock_outline).copyWith(
+              decoration: _inputDecoration('Password', Icons.lock_outline)
+                  .copyWith(
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
@@ -156,7 +159,8 @@ class _StudentLoginPageState extends State<StudentLogin> {
                     });
                   },
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscurePassword ? Icons.visibility_off_outlined : Icons
+                        .visibility_outlined,
                     color: secondaryTextColor,
                   ),
                 ),
@@ -308,7 +312,7 @@ class _StudentLoginPageState extends State<StudentLogin> {
         if (result['status']) {
           _studentPRNController.clear();
           _studentPasswordController.clear();
-          
+
           // Save student session to SharedPreferences
           await saveStudentSession(
             rememberMe: isChecked,
@@ -316,13 +320,15 @@ class _StudentLoginPageState extends State<StudentLogin> {
             studentID: result['student_id'],
             prn: result['prn'].toString(),
           );
-          
+
           // Register FCM token for push notifications
           await registerFCMToken(result['student_id']);
-          
-          navigatorWithAnimation(
-            context,
-            const StudentHomeScreen(),
+
+          Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(
+                builder: (context) => StudentHomeScreen()
+            ),
+            (route) => false
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -336,4 +342,5 @@ class _StudentLoginPageState extends State<StudentLogin> {
     }
   }
 }
+
 

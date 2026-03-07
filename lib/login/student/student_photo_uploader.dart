@@ -106,20 +106,11 @@ class _StudentPhotoUploaderState extends State<StudentPhotoUploader> {
     final faceDetector = FaceDetector(options: options);
 
     try {
+      final inputImage = InputImage.fromFilePath(imageFile.path);
       print("Starting image validation...");
-      
-      final bytes = await imageFile.readAsBytes();
+
       final imageSize = await _getImageSize(imageFile);
-      final inputImage = InputImage.fromBytes(
-        bytes: bytes,
-        metadata: InputImageMetadata(
-          size: imageSize,
-          rotation: InputImageRotation.rotation0deg,
-          format: InputImageFormat.bgra8888,
-          bytesPerRow: imageSize.width.toInt() * 4,
-        ),
-      );
-      
+
       // imageSize already fetched above alongside bytes reading
 
       print("Processing image with FaceDetector...");

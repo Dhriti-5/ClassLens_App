@@ -1,3 +1,4 @@
+import 'package:classlens/home/student_home/home_screen.dart';
 import 'package:classlens/home/teacher_home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'login/login_selector.dart';
@@ -65,9 +66,18 @@ class _SplashScreenState extends State<SplashScreen>
                                 Future.delayed(const Duration(seconds: 3), () async {
                                   if(mounted){
                                       bool isLoggedIn = await getRememberMe();
+                                      String userType = await getUserType()??"";
 
-                                      if(isLoggedIn){
-                                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> Home(teacherID: userID!,)));
+                                      if(isLoggedIn && userType == 'teacher') {
+                                        Navigator.pushReplacement(context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    Home(teacherID: userID,)));
+                                      } else if(isLoggedIn && userType == 'student'){
+                                        Navigator.pushReplacement(context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    StudentHomeScreen()));
                                       }
                                       else {
                                         splashScreenNavigator(

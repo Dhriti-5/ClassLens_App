@@ -84,7 +84,7 @@ void main() async {
 
   userName = await getUserName();
   final savedID = await getUserID();
-  userID = savedID;
+  userID = savedID??0;
 
   runApp(ProviderScope(child: MyApp()));
 }
