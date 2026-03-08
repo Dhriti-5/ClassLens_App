@@ -208,6 +208,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Expanded(child:
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,16 +217,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       "Welcome back,",
                       style: TextStyle(color: secondaryTextColor, fontSize: 12),
                     ),
-                    Text(
+                    SizedBox(child: Text(
                       widget.studentName,
                       style: const TextStyle(
                         color: primaryTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
-                    ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    )),
                   ],
-                ),
+                )),
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(

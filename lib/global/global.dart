@@ -59,6 +59,9 @@ Future<void> saveTeacherSession({
   await pref.setString(_keyUserType, "teacher");
   await pref.setString(_keyTeacherName, teacherName);
   await pref.setInt(_keyTeacherID, teacherID);
+
+  userName = teacherName;
+  userID = teacherID;
 }
 
 // ==================== Student ====================
@@ -98,17 +101,17 @@ Future<void> saveStudentSession({
 Future<void> registerFCMToken(int studentId) async {
   try {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-    
+
     // Request permission for notifications
     NotificationSettings settings = await messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
-    
+
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       String? token = await messaging.getToken();
-      
+
       if (token != null) {
         print("FCM Token: $token");
         await ApiServices.updateNotificationToken(
@@ -116,7 +119,7 @@ Future<void> registerFCMToken(int studentId) async {
           notificationToken: token,
         );
       }
-      
+
       // Listen for token refresh
       messaging.onTokenRefresh.listen((newToken) async {
         print("FCM Token refreshed: $newToken");
