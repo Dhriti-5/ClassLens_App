@@ -22,18 +22,24 @@ ClassLens is a comprehensive Flutter application designed to streamline classroo
 
 ## 🚀 Getting Started
 
-### Prerequisites
+> **📚 New to Flutter or need detailed setup instructions?**  
+> Check out our comprehensive [**Setup Guide for Beginners**](SETUP.md) with step-by-step instructions!
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) installed on your machine.
+### Quick Start (For Experienced Developers)
+
+#### Prerequisites
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.8.0 or higher) installed on your machine.
 - An IDE (VS Code or Android Studio) with Flutter plugins.
+- Backend API server running (see [SETUP.md](SETUP.md) for details).
 
-### Installation
+#### Installation
 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/yourusername/classlens.git
-    cd classlens
+    git clone https://github.com/Dhriti-5/ClassLens_App.git
+    cd ClassLens_App
     ```
 
 2.  **Install dependencies:**
@@ -42,7 +48,17 @@ ClassLens is a comprehensive Flutter application designed to streamline classroo
     flutter pub get
     ```
 
-3.  **Run the application:**
+3.  **Generate required code:**
+
+    ```bash
+    dart run build_runner build
+    ```
+
+4.  **Configure environment:**
+    
+    Update `.env.dev` or `.env.prod` with your backend API URL.
+
+5.  **Run the application:**
 
     ```bash
     flutter run
@@ -53,7 +69,7 @@ ClassLens is a comprehensive Flutter application designed to streamline classroo
 This project uses `build_runner` for generating Hive adapters. If you make changes to Hive models, run:
 
 ```bash
-dart run build_runner build
+dart run build_runner build --delete-conflicting-outputs
 ```
 
 ## 📂 Project Structure
